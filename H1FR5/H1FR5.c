@@ -82,10 +82,8 @@ void SystemClock_Config(void){
 	  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
 	  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
 	  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-	  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
+	 HAL_RCC_OscConfig(&RCC_OscInitStruct);
+
 	  /** Initializes the CPU, AHB and APB buses clocks
 	  */
 	  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -94,19 +92,15 @@ void SystemClock_Config(void){
 	  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
 	  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-	  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
+	 HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1);
+
 	  /** Initializes the peripherals clocks
 	  */
 	  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART2;
 	  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
 	  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
-	  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
-	  {
-	    Error_Handler();
-	  }
+	  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+
 
 	  HAL_NVIC_SetPriority(SysTick_IRQn,0,0);
 	
@@ -304,9 +298,24 @@ void Module_Peripheral_Init(void){
 	MX_USART2_UART_Init();
 	MX_USART3_UART_Init();
 	MX_USART4_UART_Init();
-	MX_USART5_UART_Init();
 	MX_USART6_UART_Init();
 
+	 //Circulating DMA Channels ON All Module
+	 for(int i=1;i<=NumOfPorts;i++)
+		{
+		  if(GetUart(i)==&huart1)
+				   { index_dma[i-1]=&(DMA1_Channel1->CNDTR); }
+		  else if(GetUart(i)==&huart2)
+				   { index_dma[i-1]=&(DMA1_Channel2->CNDTR); }
+		  else if(GetUart(i)==&huart3)
+				   { index_dma[i-1]=&(DMA1_Channel3->CNDTR); }
+		  else if(GetUart(i)==&huart4)
+				   { index_dma[i-1]=&(DMA1_Channel4->CNDTR); }
+		  else if(GetUart(i)==&huart5)
+				   { index_dma[i-1]=&(DMA1_Channel5->CNDTR); }
+		  else if(GetUart(i)==&huart6)
+				   { index_dma[i-1]=&(DMA1_Channel6->CNDTR); }
+		}
 
 	/* Create module special task (if needed) */
 }
@@ -339,10 +348,8 @@ uint8_t GetPort(UART_HandleTypeDef *huart){
 		return P3;
 	else if(huart->Instance == USART1)
 		return P4;
-	else if(huart->Instance == USART5)
-		return P5;
 	else if(huart->Instance == USART6)
-		return P6;
+		return P5;
 	
 	return 0;
 }
