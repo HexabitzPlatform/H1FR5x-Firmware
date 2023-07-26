@@ -207,6 +207,10 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 		/* Or parse the circular buffer and restart messaging DMA for this port */
 	}
 	else{
+		index_input[port - 1] = 0;
+		index_process[port - 1] = 0;
+		memset((uint8_t* )&UARTRxBuf[port - 1], 0, MSG_RX_BUF_SIZE);
+		HAL_UART_Receive_DMA(huart,(uint8_t* )&UARTRxBuf[port - 1] ,MSG_RX_BUF_SIZE);
 		MsgDMAStopped[port - 1] = true;		// Set a flag here and let the backend task restart DMA after parsing the buffer	
 	}
 }
