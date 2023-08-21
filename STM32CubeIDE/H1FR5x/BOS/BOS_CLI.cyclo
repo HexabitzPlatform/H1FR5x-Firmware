@@ -1,0 +1,8 @@
+BOS_CLI.c:53:6:prvCLITask	14
+BOS_CLI.c:163:6:CLI_CommandParser	27
+BOS_CLI.c:318:6:StringToLowerCase	3
+BOS_CLI.c:328:12:AddSnippet	7
+BOS_CLI.c:376:12:ParseSnippetCondition	26
+BOS_CLI.c:532:6:ParseSnippetCommand	5
+BOS_CLI.c:567:6:CheckSnippetCondition	24
+BOS_CLI.c:634:12:ExecuteSnippet	5

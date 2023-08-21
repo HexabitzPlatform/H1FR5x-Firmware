@@ -1,0 +1,9 @@
+H1FR5.c:64:6:SystemClock_Config	4
+H1FR5.c:120:9:SaveToRO	14
+H1FR5.c:222:9:ClearROtopology	1
+H1FR5.c:234:6:remoteBootloaderUpdate	7
+H1FR5.c:286:6:SetupPortForRemoteBootloaderUpdate	1
+H1FR5.c:300:6:Module_Peripheral_Init	1
+H1FR5.c:317:15:Module_MessagingTask	1
+H1FR5.c:332:9:GetPort	7
+H1FR5.c:354:6:RegisterModuleCLICommands	1
