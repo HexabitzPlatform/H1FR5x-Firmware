@@ -9,6 +9,6 @@ H1FR5_it.c:139:6:DMA1_Ch2_3_DMA2_Ch1_2_IRQHandler	4
 H1FR5_it.c:159:6:DMA1_Ch4_7_DMA2_Ch3_5_IRQHandler	6
 H1FR5_it.c:184:6:HAL_UART_TxCpltCallback	2
 H1FR5_it.c:197:6:HAL_UART_ErrorCallback	2
-H1FR5_it.c:216:6:HAL_UART_RxCpltCallback	18
-H1FR5_it.c:299:6:vApplicationStackOverflowHook	0
-H1FR5_it.c:321:6:vApplicationMallocFailedHook	0
+H1FR5_it.c:220:6:HAL_UART_RxCpltCallback	1
+H1FR5_it.c:303:6:vApplicationStackOverflowHook	0
+H1FR5_it.c:325:6:vApplicationMallocFailedHook	0
