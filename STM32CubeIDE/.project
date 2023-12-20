@@ -199,6 +199,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/H1FR5_uart.h</locationURI>
 		</link>
 		<link>
+			<name>H1FR5/SAM_M8Q.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/SAM_M8Q.c</locationURI>
+		</link>
+		<link>
+			<name>H1FR5/SAM_M8Q.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/SAM_M8Q.h</locationURI>
+		</link>
+		<link>
 			<name>H1FR5/startup_stm32g0b1ceuxn.s</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/startup_stm32g0b1ceuxn.s</locationURI>

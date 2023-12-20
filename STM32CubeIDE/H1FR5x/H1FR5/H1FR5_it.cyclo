@@ -1,6 +1,6 @@
 core_cm0plus.h:985:34:__NVIC_SystemReset	1
 H1FR5_it.c:34:6:SysTick_Handler	1
-H1FR5_it.c:44:6:HardFault_Handler	0
+H1FR5_it.c:44:7:HardFault_Handler	0
 H1FR5_it.c:64:6:USART1_IRQHandler	2
 H1FR5_it.c:82:6:USART2_LPUART2_IRQHandler	2
 H1FR5_it.c:101:6:USART3_4_5_6_LPUART1_IRQHandler	2

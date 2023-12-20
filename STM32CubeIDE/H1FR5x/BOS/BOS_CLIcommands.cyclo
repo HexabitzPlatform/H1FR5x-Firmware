@@ -5,7 +5,6 @@ BOS_CLIcommands.c:379:22:prvTaskStatsCommand	1
 BOS_CLIcommands.c:399:22:prvRunTimeStatsCommand	1
 BOS_CLIcommands.c:420:22:pingCommand	2
 BOS_CLIcommands.c:447:22:bootloaderUpdateCommand	6
-BOS_CLIcommands.c:539:22:exploreCommand	1
 BOS_CLIcommands.c:578:22:resetCommand	0
 BOS_CLIcommands.c:595:22:nameCommand	6
 BOS_CLIcommands.c:639:22:groupCommand	16

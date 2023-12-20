@@ -182,6 +182,7 @@ void SetupMessagingRxDMAs(void){
 	if(portStatus[P6] == FREE)
 		DMA_MSG_RX_Setup(P6uart,&msgRxDMA[5]);
 #endif
+
 }
 
 /*-----------------------------------------------------------*/
