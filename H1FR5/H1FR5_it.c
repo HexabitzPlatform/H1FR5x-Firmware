@@ -41,7 +41,7 @@ void SysTick_Handler(void){
 /**
  * @brief This function handles Hard Fault error callback.
  */
-void HardFault_Handler(void){
+ void HardFault_Handler(void){
 	/* Loop here */
 	uint8_t* error_message = "HardFault Error\r\n";
 	writePxMutex(PcPort, (char*) error_message, 17, 0xff, 0xff);

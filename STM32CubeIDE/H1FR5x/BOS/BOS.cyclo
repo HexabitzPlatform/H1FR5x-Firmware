@@ -21,9 +21,8 @@ BOS.c:888:6:EE_FormatForFactoryReset	3
 BOS.c:908:9:IsLowerCLIbaud	3
 BOS.c:954:9:IsModuleParameter	3
 BOS.c:966:9:IsMathOperator	8
-BOS.c:993:6:BOS_Init	4
+BOS.c:993:6:BOS_Init	6
 BOS.c:1081:6:Module_Init	1
-BOS.c:1363:12:ExploreNeighbors	3
 BOS.c:1386:12:FindBroadcastRoutes	10
 BOS.c:1467:9:FindRoute	16
 BOS.c:1550:9:minArr	5

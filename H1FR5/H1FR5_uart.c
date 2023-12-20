@@ -9,7 +9,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "BOS.h"
-
 /*  */
 #ifndef __N
 uint16_t arrayPortsDir[MaxNumOfModules]; /* Array ports directions */
@@ -21,6 +20,7 @@ DMA_HandleTypeDef hdma_usart1_rx;
 DMA_HandleTypeDef hdma_usart2_rx;
 DMA_HandleTypeDef hdma_usart3_rx;
 DMA_HandleTypeDef hdma_usart4_rx;
+DMA_HandleTypeDef hdma_usart5_rx;
 DMA_HandleTypeDef hdma_usart6_rx;
 
 /* USART1 init function */
@@ -130,16 +130,17 @@ void MX_USART4_UART_Init(void){
 /* USART5 init function */
 #ifdef _Usart5
 void MX_USART5_UART_Init(void){
-	huart5.Instance = USART5;
-	huart5.Init.BaudRate = DEF_ARRAY_BAUDRATE;
-	huart5.Init.WordLength = UART_WORDLENGTH_8B;
-	huart5.Init.StopBits = UART_STOPBITS_1;
-	huart5.Init.Parity = UART_PARITY_NONE;
-	huart5.Init.Mode = UART_MODE_TX_RX;
-	huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-	huart5.Init.OverSampling = UART_OVERSAMPLING_16;
-	huart5.Init.OneBitSampling = UART_ONEBIT_SAMPLING_DISABLED;
-	huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+	  huart5.Instance = USART5;
+	  huart5.Init.BaudRate = 9600;
+	  huart5.Init.WordLength = UART_WORDLENGTH_8B;
+	  huart5.Init.StopBits = UART_STOPBITS_1;
+	  huart5.Init.Parity = UART_PARITY_NONE;
+	  huart5.Init.Mode = UART_MODE_TX_RX;
+	  huart5.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	  huart5.Init.OverSampling = UART_OVERSAMPLING_16;
+	  huart5.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+	  huart5.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+	  huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
 	HAL_UART_Init(&huart5);
 #if _P6pol_reversed
 		huart5.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_SWAP_INIT;
@@ -337,26 +338,36 @@ void HAL_UART_MspInit(UART_HandleTypeDef *huart){
 	else if(huart->Instance == USART5){
 	#ifdef _Usart5
 		/* Peripheral clock enable */
-		__USART5_CLK_ENABLE();
+	    __HAL_RCC_USART5_CLK_ENABLE();
+
+	    __HAL_RCC_GPIOB_CLK_ENABLE();
 		
 		/* USART5 GPIO Configuration */
-		GPIO_InitStruct.Pin = USART5_TX_PIN;
-		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-		GPIO_InitStruct.Alternate = USART5_AF;
-		HAL_GPIO_Init(USART5_TX_PORT,&GPIO_InitStruct);
+	    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
+	    GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+	    GPIO_InitStruct.Pull = GPIO_NOPULL;
+	    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+	    GPIO_InitStruct.Alternate = GPIO_AF8_USART5;
+	    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 		
-		GPIO_InitStruct.Pin = USART5_RX_PIN;
-		GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
-		GPIO_InitStruct.Pull = GPIO_NOPULL;
-		GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-		GPIO_InitStruct.Alternate = USART5_AF;
-		HAL_GPIO_Init(USART5_RX_PORT,&GPIO_InitStruct);
-		
+	    /* USART5 DMA Init */
+	    /* USART5_RX Init */
+	    hdma_usart5_rx.Instance = DMA1_Channel5;
+	    hdma_usart5_rx.Init.Request = DMA_REQUEST_USART5_RX;
+	    hdma_usart5_rx.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	    hdma_usart5_rx.Init.PeriphInc = DMA_PINC_DISABLE;
+	    hdma_usart5_rx.Init.MemInc = DMA_MINC_ENABLE;
+	    hdma_usart5_rx.Init.PeriphDataAlignment = DMA_PDATAALIGN_BYTE;
+	    hdma_usart5_rx.Init.MemDataAlignment = DMA_MDATAALIGN_BYTE;
+	    hdma_usart5_rx.Init.Mode = DMA_CIRCULAR;
+	    hdma_usart5_rx.Init.Priority = DMA_PRIORITY_LOW;
+	    HAL_DMA_Init(&hdma_usart5_rx);
+
+	    __HAL_LINKDMA(huart,hdmarx,hdma_usart5_rx);
+
 		/* Peripheral interrupt init*/
-		HAL_NVIC_SetPriority(USART3_4_5_6_LPUART1_IRQn,1,0);
-		HAL_NVIC_EnableIRQ(USART3_4_5_6_LPUART1_IRQn);
+//		HAL_NVIC_SetPriority(USART3_4_5_6_LPUART1_IRQn,1,0);
+//		HAL_NVIC_EnableIRQ(USART3_4_5_6_LPUART1_IRQn);
 		//TOBECHECKED
 #endif
 	}
