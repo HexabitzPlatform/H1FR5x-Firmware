@@ -1,8 +1,9 @@
 /*
- * SAM_M8Q.h
- *
- *  Created on: Feb 2, 2022
- *      Author: Salah
+ BitzOS (BOS) V0.3.1 - Copyright (C) 2017-2024 Hexabitz
+ All rights reserved
+
+ File Name     : SAM_M8Q.c
+
  */
 
 
