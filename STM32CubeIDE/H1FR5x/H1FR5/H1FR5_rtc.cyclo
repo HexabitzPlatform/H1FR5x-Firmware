@@ -1,4 +1,4 @@
-H1FR5_rtc.c:28:12:RTC_Init	5
-H1FR5_rtc.c:77:12:RTC_CalendarConfig	5
-H1FR5_rtc.c:131:12:BOS_CalendarConfig	6
-H1FR5_rtc.c:187:6:GetTimeDate	1
+..\..\H1FR5\H1FR5_rtc.c:28:12:RTC_Init	5
+..\..\H1FR5\H1FR5_rtc.c:77:12:RTC_CalendarConfig	5
+..\..\H1FR5\H1FR5_rtc.c:131:12:BOS_CalendarConfig	6
+..\..\H1FR5\H1FR5_rtc.c:187:6:GetTimeDate	1
