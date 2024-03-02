@@ -1,0 +1,4 @@
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_smbus_ex.c:88:19:HAL_SMBUSEx_EnableWakeUp	3
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_smbus_ex.c:127:19:HAL_SMBUSEx_DisableWakeUp	3
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_smbus_ex.c:192:6:HAL_SMBUSEx_EnableFastModePlus	1
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_smbus_ex.c:219:6:HAL_SMBUSEx_DisableFastModePlus	1

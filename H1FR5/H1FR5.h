@@ -1,5 +1,5 @@
 /*
- BitzOS (BOS) V0.2.9 - Copyright (C) 2017-2023 Hexabitz
+ BitzOS (BOS) V0.3.1 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
  
  File Name     : H1FR5.h
@@ -31,7 +31,7 @@
 
 
 /* Port-related definitions */
-#define	NumOfPorts			6
+#define	NumOfPorts			5
 
 #define P_PROG 				P2						/* ST factory bootloader UART */
 
@@ -41,14 +41,14 @@
 #define _P3 
 #define _P4 
 #define _P5 
-#define _P6
+
 
 /* Define available USARTs */
 #define _Usart1 1
 #define _Usart2 1
 #define _Usart3 1
 #define _Usart4 1
-#define _Usart5 1
+#define _Usart5	1
 #define _Usart6	1
 
 
@@ -58,9 +58,7 @@
 #define P2uart &huart2
 #define P3uart &huart3
 #define P4uart &huart1
-#define P5uart &huart5
-#define P6uart &huart6
-
+#define P5uart &huart6
 
 /* Port Definitions */
 #define	USART1_TX_PIN		GPIO_PIN_9
@@ -87,11 +85,17 @@
 #define	USART4_RX_PORT		GPIOA
 #define	USART4_AF			GPIO_AF4_USART4
 
-#define	USART5_TX_PIN		GPIO_PIN_3
-#define	USART5_RX_PIN		GPIO_PIN_2
-#define	USART5_TX_PORT		GPIOD
-#define	USART5_RX_PORT		GPIOD
-#define	USART5_AF			GPIO_AF3_USART5
+#define	USART4_TX_PIN		GPIO_PIN_0
+#define	USART4_RX_PIN		GPIO_PIN_1
+#define	USART4_TX_PORT		GPIOA
+#define	USART4_RX_PORT		GPIOA
+#define	USART4_AF			GPIO_AF4_USART4
+
+#define	USART5_TX_PIN		GPIO_PIN_0
+#define	USART5_RX_PIN		GPIO_PIN_1
+#define	USART5_TX_PORT		GPIOB
+#define	USART5_RX_PORT		GPIOB
+#define	USART5_AF			GPIO_AF8_USART5
 
 #define	USART6_TX_PIN		GPIO_PIN_8
 #define	USART6_RX_PIN		GPIO_PIN_9
@@ -113,6 +117,8 @@ typedef enum {
 	H1FR5_OK =0,
 	H1FR5_ERR_UnknownMessage,
 	H1FR5_ERR_WrongParams,
+	H1FR5_ERR_TERMINATED,
+	H1FR5_ERR_BUSY,
 	H1FR5_ERROR =255
 } Module_Status;
 
@@ -138,6 +144,8 @@ extern void MX_USART6_UART_Init(void);
 extern void SystemClock_Config(void);
 extern void ExecuteMonitor(void);
 
+
+
 /* -----------------------------------------------------------------------
  |								  APIs							          |  																 	|
 /* -----------------------------------------------------------------------
@@ -145,7 +153,11 @@ extern void ExecuteMonitor(void);
 
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
 void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport);
-
+extern void GPSHandel(void);
+extern Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
+extern Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
+extern Module_Status GetSpeed(float *speedinch, float *speedkm);
+extern Module_Status GetHeight(float *height);
 /* -----------------------------------------------------------------------
  |								Commands							      |															 	|
 /* -----------------------------------------------------------------------

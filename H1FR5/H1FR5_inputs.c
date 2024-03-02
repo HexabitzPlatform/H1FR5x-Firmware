@@ -1,5 +1,5 @@
 /*
- BitzOS (BOS) V0.2.9 - Copyright (C) 2017-2023 Hexabitz
+ BitzOS (BOS) V0.3.1 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
 
  File Name     : BOS_inputs.c
@@ -488,9 +488,9 @@ BOS_Status RemovePortButton(uint8_t port) {
 		MX_USART4_UART_Init();
 #endif
 	} else if (huart->Instance == USART5) {
-#ifdef _Usart5	
-		MX_USART5_UART_Init();
-#endif
+//#ifdef _Usart5
+//		MX_USART5_UART_Init();
+//#endif
 	} else if (huart->Instance == USART6) {
 #ifdef _Usart6	
 		MX_USART6_UART_Init();

@@ -1,0 +1,4 @@
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_msp_template.c:48:6:HAL_MspInit	1
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_msp_template.c:59:6:HAL_MspDeInit	1
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_msp_template.c:70:6:HAL_PPP_MspInit	1
+..\..\Thirdparty\STM32G0xx_HAL_Driver\Src\stm32g0xx_hal_msp_template.c:81:6:HAL_PPP_MspDeInit	1
