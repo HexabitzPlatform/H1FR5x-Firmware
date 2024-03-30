@@ -2,32 +2,35 @@
  BitzOS (BOS) V0.3.1 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
 
- File Name     : SAM_M8Q.c
+ File Name     : SAM_M10Q.c
 
  */
 
 
-#include "SAM_M8Q.h"
+#include "SAM_M10Q.h"
 #include <stdlib.h>
 #include <string.h>
+
+extern DMA_HandleTypeDef hdma_usart5_rx;
+extern UART_HandleTypeDef huart5;
+
 char NMEA_Message_TDR[NMEA_Message_SIZE];		//Receive NMEA GPS Protocol Message Buffer
 char NMEA_Message_RDR[NMEA_Message_SIZE];		//Out NMEA GPS Protocol Message Buffer
 GPS_TYPE GPS_INFO;
 GPS_STATUS GPS_STATUS_INFO;
 Satellites_Info Satellites[NSV_IN_VIEW];
-uint8_t GP_Number_Of_Satellites;				//Number of Active Satellites
-uint8_t GSV_Satellites_STATUS;					//Get All Satellites information 0x00 ERROR || 0x01 Complete
-uint8_t speedKm,speedKnot;
-
-/*Message_OS variables*/
 Message_Prosses_Buffer Message_Incoming;
 DMA_INDEXER DMA_INDEX;
 Filter_Statues _FILTER;
-extern DMA_HandleTypeDef hdma_usart5_rx;
+
+uint8_t GP_Number_Of_Satellites;				//Number of Active Satellites
+uint8_t GSV_Satellites_STATUS;					//Get All Satellites information 0x00 ERROR || 0x01 Complete
+uint8_t speedKm,speedKnot;
 uint8_t _flag = 1;
 uint16_t _GLL,_RMC,_ZDA,_GGA,_GNS,_VTG;
-extern UART_HandleTypeDef huart5;
-/*Message_OS function*/
+
+
+/*-----------------------------------------------------------*/
 void Incoming_Message_Handel()
 {
 
@@ -42,11 +45,9 @@ void Incoming_Message_Handel()
 			{GPS_IN_Action();}
 	DMA_INDEX.LAST_INDEX =  DMA_INDEX.INDEX;
 
-
 }
 
-
-
+/*-----------------------------------------------------------*/
 /*return the Size of NMEA Message
  * @ _data[] NMEA Buffer*/
 uint8_t Size_of_NMEA_Message(char _data[])
@@ -59,6 +60,7 @@ uint8_t Size_of_NMEA_Message(char _data[])
 	return 0xFF;
 }
 
+/*-----------------------------------------------------------*/
 /*Build CRC NMEA For Message Start after Header '$' And end Before CRC '*'
  * @ _data[] NMEA Buffer
  * @ data_length length of NMEA DATA
@@ -84,6 +86,7 @@ uint16_t CRC_XOR(char _data[], size_t data_length)
 	return Return_XOR;
 }
 
+/*-----------------------------------------------------------*/
 /*Build NMEA protocol message on NMEA_Message_TDR[]
  * @NMEA_Talker_IDs[2]		GPS, SBAS, QZSS 	 GP
  *							GLONASS 			 GL
@@ -119,6 +122,7 @@ void Build_NMEA_message(char NMEA_Talker_IDs[],char _CMD[],char _DATA[])
 
 }
 
+/*-----------------------------------------------------------*/
 /*Build PUBX Message On NMEA_Message_TDR[]*/
 void Build_PUBX_message(char _DATA[])
 {
@@ -143,6 +147,7 @@ void Build_PUBX_message(char _DATA[])
 	NMEA_Message_TDR[_DATA_Size+9] = '\n';
 }
 
+/*-----------------------------------------------------------*/
 /*Fill From DMA TO NMEA_Message_RDR[] Buffer
  * @ N DMA for GPS INDEX Buffer*/
 //uint8_t Indexer,k;
@@ -167,6 +172,7 @@ void NMEA_FILL_Incoming_Message()
 	}
 }
 
+/*-----------------------------------------------------------*/
 /*Check Form NMEA Incoming Messages
  * @ _Message_RDR[] NMEA Incoming Messages Buffer
  * return Filter_Statues (Reject | CRC_error | Accept)*/
@@ -189,6 +195,7 @@ Filter_Statues NMEA_Filter_Incoming_Messages(char _Message_RDR[])
 	return Accept;
 }
 
+/*-----------------------------------------------------------*/
 /*Get Index Number For NMEA_Message_RDR[] From NMEA_Field_No*/
 uint8_t NMEA_Field_No_INDEX(uint8_t _Field_No)
 {
@@ -204,6 +211,8 @@ uint8_t NMEA_Field_No_INDEX(uint8_t _Field_No)
 	}
 	return 0XFF;
 }
+
+/*-----------------------------------------------------------*/
 /*Convert From ASCII char to uint8_t DEC*/
 uint8_t CHAR_TO_DEC(char _CAHR)
 {
@@ -211,6 +220,7 @@ uint8_t CHAR_TO_DEC(char _CAHR)
 	return _CAHR;
 }
 
+/*-----------------------------------------------------------*/
 /*Convert From ASCII HEX to uint8_t HEX*/
 uint8_t HEX_TO_DEC(char _CAHR[2])
 {
@@ -219,6 +229,7 @@ uint8_t HEX_TO_DEC(char _CAHR[2])
 	return (uint8_t) ((_CAHR[0]<<4) +  _CAHR[1]);
 }
 
+/*-----------------------------------------------------------*/
 /*Convert From ASCII String to uint16_t DEC
  * Use only For NMEA Message*/
 uint16_t Sting_TO_DEC(char _STRING[])
@@ -243,6 +254,7 @@ uint16_t Sting_TO_DEC(char _STRING[])
 	return _DEC;
 }
 
+/*-----------------------------------------------------------*/
 /*Convert From ASCII String to float
  * Use only For NMEA Message*/
 uint8_t Sting_TO_Float(char _STRING[])
@@ -280,6 +292,7 @@ uint8_t Sting_TO_Float(char _STRING[])
 	return _FLOAT;
 }
 
+/*-----------------------------------------------------------*/
 float stringToFloat(char* str)
 {
     float result = 0.0;
@@ -320,6 +333,7 @@ float stringToFloat(char* str)
     return result * sign;
 }
 
+/*-----------------------------------------------------------*/
 /*Get GPS Information From NMEA_Message_RDR[]
  * Latitude and longitude, with time of position fix and status
  * from GNGLL GPS Message
@@ -380,6 +394,7 @@ GPS_STATUS Get_GPS_GLL_Information(GPS_TYPE* Temp_info)
 	return _Status;
 }
 
+/*-----------------------------------------------------------*/
 /*Get GPS Information From NMEA_Message_RDR[]
  * Time and Date
  * from GNZDA GPS Message
@@ -417,6 +432,7 @@ GPS_STATUS Get_GPS_ZDA_Information(GPS_TYPE* Temp_info)
 	return _Status;
 }
 
+/*-----------------------------------------------------------*/
 /*Get GPS Information From NMEA_Message_RDR[]
  * Recommended Minimum data ,Time & Latitude
  * from GNZDA GPS Message
@@ -481,6 +497,7 @@ GPS_STATUS Get_GPS_RMC_Information(GPS_TYPE* Temp_info)
 	return _Status;
 }
 
+/*-----------------------------------------------------------*/
 /*Get GPS Satellites in View Information From NMEA_Message_RDR[]
  * GNSS Satellites in View
  * return Satellites_Info* Parameter
@@ -526,6 +543,7 @@ Number_of_Satellites_t Get_GPS_GSV_Information(Satellites_Info* Temp_info)
 	return numSV;
 }
 
+/*-----------------------------------------------------------*/
 /*Get GPS Satellites in View Information From NMEA_Message_RDR[]
  * GNSS Satellites in View
  * return Satellites_Info* Parameter
@@ -592,7 +610,7 @@ GPS_STATUS Get_GPS_GGA_GNS_Information(GPS_TYPE* Temp_info)
 }
 }
 
-
+/*-----------------------------------------------------------*/
 /*Get GPS Satellites in View Information From NMEA_Message_RDR[]
  * GNSS Satellites in View
  * return Satellites_Info* Parameter
@@ -627,6 +645,7 @@ GPS_STATUS Get_GPS_VTG_Information(GPS_TYPE* Temp_info)
 	return _Status;
 }
 
+/*-----------------------------------------------------------*/
 /*Get Talker_ID From NMEA Protocol
  * @ _NMEA_Message_Buffer[]
  * return Talker ID*/
@@ -650,6 +669,7 @@ GPS_TALKER_ID GPS_Get_Talker_ID ( char _NMEA_Message_Buffer[])
 	return 0XFF;
 }
 
+/*-----------------------------------------------------------*/
 /*Get Command From NMEA Protocol
  * @ _NMEA_Message_Buffer[]
  * return Message ID*/
@@ -713,6 +733,7 @@ GPS_MESSAGE_ID GPS_Get_Message_ID ( char _NMEA_Message_Buffer[])
 	return 0XFF;
 }
 
+/*-----------------------------------------------------------*/
 /*GPS SAM_M8Q Message Parser */
 
 void GPS_IN_Action()
@@ -764,4 +785,5 @@ void GPS_IN_Action()
 		Message_Incoming.Message_ID = 0;
 	}
 }
-
+/*-----------------------------------------------------------*/
+/************************ (C) COPYRIGHT HEXABITZ *****END OF FILE****/

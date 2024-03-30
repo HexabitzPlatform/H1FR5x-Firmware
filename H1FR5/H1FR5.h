@@ -153,11 +153,12 @@ extern void ExecuteMonitor(void);
 
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
 void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport);
-extern void GPSHandel(void);
-extern Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
-extern Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
-extern Module_Status GetSpeed(float *speedinch, float *speedkm);
-extern Module_Status GetHeight(float *height);
+
+void GPSHandel(void);
+Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
+Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
+Module_Status GetSpeed(float *speedinch, float *speedkm);
+Module_Status GetHeight(float *height);
 /* -----------------------------------------------------------------------
  |								Commands							      |															 	|
 /* -----------------------------------------------------------------------
