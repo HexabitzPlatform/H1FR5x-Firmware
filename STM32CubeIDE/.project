@@ -199,16 +199,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/H1FR5_uart.h</locationURI>
 		</link>
 		<link>
-			<name>H1FR5/SAM_M10Q.c</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/SAM_M10Q.c</locationURI>
-		</link>
-		<link>
-			<name>H1FR5/SAM_M10Q.h</name>
-			<type>1</type>
-			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/SAM_M10Q.h</locationURI>
-		</link>
-		<link>
 			<name>H1FR5/startup_stm32g0b1ceuxn.s</name>
 			<type>1</type>
 			<locationURI>PARENT-1-PROJECT_LOC/H1FR5/startup_stm32g0b1ceuxn.s</locationURI>
@@ -239,6 +229,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/README.md</locationURI>
 		</link>
 		<link>
+			<name>Thirdparty/SAM_M10Q</name>
+			<type>2</type>
+			<locationURI>virtual:/virtual</locationURI>
+		</link>
+		<link>
 			<name>Thirdparty/STM32G0xx_HAL_Driver</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -267,6 +262,16 @@
 			<name>Thirdparty/Middleware/STM32G0xx</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/Middleware/STM32G0xx</locationURI>
+		</link>
+		<link>
+			<name>Thirdparty/SAM_M10Q/SAM_M10Q.c</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/SAM_M10Q/SAM_M10Q.c</locationURI>
+		</link>
+		<link>
+			<name>Thirdparty/SAM_M10Q/SAM_M10Q.h</name>
+			<type>1</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/SAM_M10Q/SAM_M10Q.h</locationURI>
 		</link>
 		<link>
 			<name>Thirdparty/STM32G0xx_HAL_Driver/Inc</name>
