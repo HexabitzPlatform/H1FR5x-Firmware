@@ -1,5 +1,5 @@
 /*
- BitzOS (BOS) V0.3.1 - Copyright (C) 2017-2024 Hexabitz
+ BitzOS (BOS) V0.3.2 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
 
  File Name     : H1FR5.c
@@ -16,7 +16,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "BOS.h"
 #include "H1FR5_inputs.h"
-#include "SAM_M8Q.h"
+#include "SAM_M10Q.h"
+
 /* Define UART variables */
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -41,7 +42,7 @@ static bool stopStream = false;
 void ExecuteMonitor(void);
 static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
+//static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
 static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout, SampleMemsToPort function);
 static portBASE_TYPE StopStreamCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 /* Create CLI commands --------------------------------------------------------*/
@@ -54,7 +55,7 @@ const CLI_Command_Definition_t SampleCommandDefinition = {
 	SampleGPSCommand,
 	1
 };
-
+/*-----------------------------------------------------------*/
 /* CLI command structure : stream */
 const CLI_Command_Definition_t StreamCommandDefinition = {
 	(const int8_t *) "stream",
@@ -62,7 +63,7 @@ const CLI_Command_Definition_t StreamCommandDefinition = {
 	StreamGPSCommand,
 	-1
 };
-
+/*-----------------------------------------------------------*/
 /* CLI command structure : stop */
 const CLI_Command_Definition_t StopCommandDefinition = {
 	(const int8_t *) "stop",
@@ -71,8 +72,8 @@ const CLI_Command_Definition_t StopCommandDefinition = {
 	StopStreamCommand,
 	0
 };
-/* -----------------------------------------------------------------------
- |												 Private Functions	 														|
+/* ---------------------------------------------------------------------
+ |								 Private Functions	                	|
  ----------------------------------------------------------------------- 
  */
 
@@ -322,6 +323,7 @@ void SetupPortForRemoteBootloaderUpdate(uint8_t port){
 	__HAL_UART_ENABLE_IT(huart,UART_IT_RXNE);
 }
 
+/*-----------------------------------------------------------*/
 /* --- H1FR5 module initialization.
  */
 void Module_Peripheral_Init(void){
@@ -386,6 +388,8 @@ void RegisterModuleCLICommands(void){
 	FreeRTOS_CLIRegisterCommand( &StopCommandDefinition);
 }
 
+/*-----------------------------------------------------------*/
+
 static Module_Status PollingSleepCLISafe(uint32_t period)
 {
 	const unsigned DELTA_SLEEP_MS = 100; // milliseconds
@@ -415,41 +419,43 @@ static Module_Status PollingSleepCLISafe(uint32_t period)
 
 /*-----------------------------------------------------------*/
 
-static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function)
-{
-	Module_Status status = H1FR5_OK;
-	int8_t *pcOutputString = NULL;
-
-	if (period < MIN_MEMS_PERIOD_MS)
-		return H1FR5_ERR_WrongParams;
-
-	// TODO: Check if CLI is enable or not
-
-	if (period > timeout)
-		timeout = period;
-
-	long numTimes = timeout / period;
-	stopStream = false;
-
-	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
-		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
-		function((char *)pcOutputString, 100);
-
-
-		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
-//		if (PollingSleepCLISafe(period) != H1FR5_OK)
+//static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function)
+//{
+//	Module_Status status = H1FR5_OK;
+//	int8_t *pcOutputString = NULL;
+//
+//	if (period < MIN_MEMS_PERIOD_MS)
+//		return H1FR5_ERR_WrongParams;
+//
+//	// TODO: Check if CLI is enable or not
+//
+//	if (period > timeout)
+//		timeout = period;
+//
+//	long numTimes = timeout / period;
+//	stopStream = false;
+//
+//	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+//		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+//		function((char *)pcOutputString, 100);
+//
+//
+//		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
+////		if (PollingSleepCLISafe(period) != H1FR5_OK)
+////			break;
+//		vTaskDelay(pdMS_TO_TICKS(period));
+//		if (stopStream) {
+//			status = H1FR5_ERR_TERMINATED;
 //			break;
-		vTaskDelay(pdMS_TO_TICKS(period));
-		if (stopStream) {
-			status = H1FR5_ERR_TERMINATED;
-			break;
-		}
-	}
+//		}
+//	}
+//
+//	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+//  sprintf((char *)pcOutputString, "\r\n");
+//	return status;
+//}
 
-	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
-  sprintf((char *)pcOutputString, "\r\n");
-	return status;
-}
+/*-----------------------------------------------------------*/
 
 static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout, SampleMemsToPort function)
 {
@@ -492,6 +498,9 @@ void GPSHandel(void)
 {
 	Incoming_Message_Handel();
 }
+
+/*-----------------------------------------------------------*/
+
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator)
 {
 	Module_Status status = H1FR5_OK;
@@ -502,6 +511,8 @@ Module_Status GetPosition(float * longdegree, float * latdegree, char *longindic
 	return status;
 }
 
+/*-----------------------------------------------------------*/
+
 Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec)
 {
 	Module_Status status = H1FR5_OK;
@@ -511,6 +522,8 @@ Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec)
 	return status;
 }
 
+/*-----------------------------------------------------------*/
+
 Module_Status GetSpeed(float *speedinch, float *speedkm)
 {
 	Module_Status status = H1FR5_OK;
@@ -519,12 +532,16 @@ Module_Status GetSpeed(float *speedinch, float *speedkm)
 	return status;
 }
 
+/*-----------------------------------------------------------*/
+
 Module_Status GetHeight(float *height)
 {
 	Module_Status status = H1FR5_OK;
 	*height = GPS_INFO.HEIGHT.height;
 	return status;
 }
+
+/*-----------------------------------------------------------*/
 
 Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 {
@@ -566,6 +583,9 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 		}
 	return status;
 }
+
+/*-----------------------------------------------------------*/
+
 Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 {
 	Module_Status status = H1FR5_OK;
@@ -591,6 +611,9 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 		}
 	return status;
 }
+
+/*-----------------------------------------------------------*/
+
 Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 {
 	Module_Status status = H1FR5_OK;
@@ -626,6 +649,9 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 		}
 	return status;
 }
+
+/*-----------------------------------------------------------*/
+
 Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 {
 	Module_Status status = H1FR5_OK;
@@ -654,7 +680,7 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 		}
 	return status;
 }
-
+/*-----------------------------------------------------------*/
 void SamplePositionToString(char *cstring, size_t maxLen)
 {
 	float longdegree,latdegree;
@@ -662,47 +688,48 @@ void SamplePositionToString(char *cstring, size_t maxLen)
 	GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
 	snprintf(cstring, maxLen, "Longitude_Degree: %.3f (deg)\r\nLongitude_indicator: %c\r\nLatitude_Degree: %.3f (deg)\r\nLatitude_indicator: %c\r\n", longdegree, longindicator, latdegree, latindicator);
 }
-
+/*-----------------------------------------------------------*/
 void SampleUTCToString(char *cstring, size_t maxLen)
 {
 	uint8_t hours,min,sec;
 	GetUTC(&hours, &min, &sec);
 	snprintf(cstring, maxLen, "hours: %d min: %d sec: %d\r\n", hours, min, sec);
 }
-
+/*-----------------------------------------------------------*/
 void SampleSpeedToString(char *cstring, size_t maxLen)
 {
 	float speedknot,speedkm;
 	GetSpeed(&speedknot, &speedkm);
 	snprintf(cstring, maxLen, "speedkm: %.3f (km/h) speedinch: %.3f (knot)\r\n", speedkm, speedknot);
 }
-
+/*-----------------------------------------------------------*/
 void SampleHeightToString(char *cstring, size_t maxLen)
 {
 	float height;
 	GetHeight(&height);
 	snprintf(cstring, maxLen, "height: %.1f (m)\r\n", height);
 }
+/*-----------------------------------------------------------*/
 
-Module_Status StreamPositionToCLI(uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToCLI(period, timeout, SamplePositionToString);
-}
-
-Module_Status StreamUTCToCLI(uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToCLI(period, timeout, SampleUTCToString);
-}
-
-Module_Status StreamSpeedToCLI(uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToCLI(period, timeout, SampleSpeedToString);
-}
-
-Module_Status StreamHeightToCLI(uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToCLI(period, timeout, SampleHeightToString);
-}
+//Module_Status StreamPositionToCLI(uint32_t period, uint32_t timeout)
+//{
+//	return StreamMemsToCLI(period, timeout, SamplePositionToString);
+//}
+//
+//Module_Status StreamUTCToCLI(uint32_t period, uint32_t timeout)
+//{
+//	return StreamMemsToCLI(period, timeout, SampleUTCToString);
+//}
+//
+//Module_Status StreamSpeedToCLI(uint32_t period, uint32_t timeout)
+//{
+//	return StreamMemsToCLI(period, timeout, SampleSpeedToString);
+//}
+//
+//Module_Status StreamHeightToCLI(uint32_t period, uint32_t timeout)
+//{
+//	return StreamMemsToCLI(period, timeout, SampleHeightToString);
+//}
 
 Module_Status StreamPositionToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
 {
@@ -726,15 +753,13 @@ Module_Status StreamHeightToPort(uint8_t port, uint8_t module, uint32_t period, 
 {
 	return StreamMemsToPort(port, module, period, timeout, SampleHeightToPort);
 }
-
+/*-----------------------------------------------------------*/
 void stopStreamMems(void)
 {
 	stopStream = true;
 }
 
-
 /*-----------------------------------------------------------*/
-
 
 Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src, uint8_t dst, uint8_t shift)
 {
@@ -771,12 +796,10 @@ Module_Status Module_MessagingTask(uint16_t code, uint8_t port, uint8_t src, uin
 	return status;
 }
 
-
 /* -----------------------------------------------------------------------
  |								Commands							      |
    -----------------------------------------------------------------------
  */
-
 
 static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString)
 {
@@ -825,6 +848,7 @@ static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	return pdFALSE;
 }
 
+/*-----------------------------------------------------------*/
 
 static bool StreamCommandParser(const int8_t *pcCommandString, const char **ppSensName, portBASE_TYPE *pSensNameLen,
 														bool *pPortOrCLI, uint32_t *pPeriod, uint32_t *pTimeout, uint8_t *pPort, uint8_t *pModule)
@@ -898,7 +922,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	do {
 		if (!strncmp(pSensName, positionCmdName, strlen(positionCmdName))) {
 			if (portOrCLI) {
-				StreamPositionToCLI(period, timeout);
+//				StreamPositionToCLI(period, timeout);
 
 			} else {
 				StreamPositionToPort(port, module, period, timeout);
@@ -907,7 +931,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 		} else if (!strncmp(pSensName, utcCmdName, strlen(utcCmdName))) {
 			if (portOrCLI) {
-				StreamUTCToCLI(period, timeout);
+//				StreamUTCToCLI(period, timeout);
 
 			} else {
 				StreamUTCToPort(port, module, period, timeout);
@@ -917,7 +941,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 		}
 		else if (!strncmp(pSensName, speedCmdName, strlen(speedCmdName))) {
 			if (portOrCLI) {
-				StreamSpeedToCLI(period, timeout);
+//				StreamSpeedToCLI(period, timeout);
 
 			} else {
 				StreamSpeedToPort(port, module, period, timeout);
@@ -926,7 +950,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 		} else if (!strncmp(pSensName, heightCmdName, strlen(heightCmdName))) {
 			if (portOrCLI) {
-				StreamHeightToCLI(period, timeout);
+//				StreamHeightToCLI(period, timeout);
 
 			} else {
 				StreamHeightToPort(port, module, period, timeout);
@@ -945,6 +969,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	return pdFALSE;
 }
 
+/*-----------------------------------------------------------*/
 static portBASE_TYPE StopStreamCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString)
 {
 	// Make sure we return something
