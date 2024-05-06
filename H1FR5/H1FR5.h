@@ -107,11 +107,23 @@
 
 #define NUM_MODULE_PARAMS						1
 
+#define SAMPLE_TEM              0
+#define SAMPLE_TO_PORT          1
+#define STREAM_TO_PORT          2
+#define STREAM_TO_Terminal      3
 /* Module EEPROM Variables */
 
 // Module Addressing Space 500 - 599
 #define _EE_MODULE							500		
 
+
+typedef enum {
+	Heigh=0,
+	Speed,
+	UTC,
+	Position,
+
+}All_Data;
 /* Module_Status Type Definition */
 typedef enum {
 	H1FR5_OK =0,

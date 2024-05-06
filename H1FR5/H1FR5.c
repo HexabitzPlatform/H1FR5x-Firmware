@@ -29,7 +29,14 @@ UART_HandleTypeDef huart6;
 /* Exported variables */
 extern FLASH_ProcessTypeDef pFlash;
 extern uint8_t numOfRecordedSnippets;
-
+uint8_t port1, module1;
+uint8_t port2 ,module2,mode2,mode1;
+uint32_t Numofsamples1 ,timeout1;
+uint8_t port3 ,module3,mode3;
+uint32_t Numofsamples2 ,timeout2;
+uint32_t Numofsamples3 ,timeout3;
+uint8_t flag ;
+uint8_t tofMode ;
 /* Module exported parameters ------------------------------------------------*/
 module_param_t modParam[NUM_MODULE_PARAMS] ={{.paramPtr = NULL, .paramFormat =FMT_FLOAT, .paramName =""}};
 #define MIN_MEMS_PERIOD_MS				100
@@ -38,7 +45,11 @@ module_param_t modParam[NUM_MODULE_PARAMS] ={{.paramPtr = NULL, .paramFormat =FM
 typedef Module_Status (*SampleMemsToPort)(uint8_t, uint8_t);
 typedef void (*SampleMemsToString)(char *, size_t);
 static bool stopStream = false;
+
+TaskHandle_t GPSTaskHandle = NULL;
+uint8_t tofMode ;
 /* Private function prototypes -----------------------------------------------*/
+void GPS(void *argument);
 void ExecuteMonitor(void);
 static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
@@ -353,6 +364,8 @@ void Module_Peripheral_Init(void){
 				   { index_dma[i-1]=&(DMA1_Channel6->CNDTR); }
 		}
 
+	 xTaskCreate(GPS,(const char* ) "GPS",configMINIMAL_STACK_SIZE,NULL,osPriorityNormal - osPriorityIdle,&GPSTaskHandle);
+
 }
 
 /*-----------------------------------------------------------*/
@@ -455,12 +468,30 @@ static Module_Status PollingSleepCLISafe(uint32_t period)
 //	return status;
 //}
 
+void GPS(void *argument) {
+
+
+	/* Infinite loop */
+	for (;;) {
+		/*  */
+switch (tofMode) {
+	case SAMPLE_TEM:
+
+		break;
+	default:
+		break;
+}
+
+		taskYIELD();
+	}
+
+}
 /*-----------------------------------------------------------*/
 
-static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout, SampleMemsToPort function)
+static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout, SampleMemsToPort function)
 {
 	Module_Status status = H1FR5_OK;
-
+	uint32_t period = timeout / Numofsamples;
 
 	if (period < MIN_MEMS_PERIOD_MS)
 		return H1FR5_ERR_WrongParams;
@@ -731,9 +762,12 @@ void SampleHeightToString(char *cstring, size_t maxLen)
 //	return StreamMemsToCLI(period, timeout, SampleHeightToString);
 //}
 
-Module_Status StreamPositionToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToPort(port, module, period, timeout, SamplePositionToPort);
+Module_Status StreamPositionToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function)
+ {
+
+	StreamMemsToPort(port, module, Numofsamples, timeout, SamplePositionToPort);
+
+
 }
 /*-----------------------------------------------------------*/
 
@@ -925,7 +959,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 //				StreamPositionToCLI(period, timeout);
 
 			} else {
-				StreamPositionToPort(port, module, period, timeout);
+//				StreamPositionToPort(port, module, period, timeout);
 
 			}
 
