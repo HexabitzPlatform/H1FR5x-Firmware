@@ -58,7 +58,7 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module);
 static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout, SampleMemsToPort function);
 static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-//static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
+static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
 static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout, SampleMemsToPort function);
 static portBASE_TYPE StopStreamCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 /* Create CLI commands --------------------------------------------------------*/
@@ -408,7 +408,7 @@ void RegisterModuleCLICommands(void){
 
 /*-----------------------------------------------------------*/
 
-static Module_Status PollingSleepCLISafe(uint32_t period)
+static Module_Status PollingSleepCLISafe(uint32_t period, long Numofsamples)
 {
 	const unsigned DELTA_SLEEP_MS = 100; // milliseconds
 	long numDeltaDelay =  period / DELTA_SLEEP_MS;
@@ -422,6 +422,7 @@ static Module_Status PollingSleepCLISafe(uint32_t period)
 		{
 			if (UARTRxBuf[PcPort-1][chr] == '\r') {
 				UARTRxBuf[PcPort-1][chr] = 0;
+				flag=1;
 				return H1FR5_ERR_TERMINATED;
 			}
 		}
@@ -437,41 +438,46 @@ static Module_Status PollingSleepCLISafe(uint32_t period)
 
 /*-----------------------------------------------------------*/
 
-//static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function)
-//{
-//	Module_Status status = H1FR5_OK;
-//	int8_t *pcOutputString = NULL;
-//
-//	if (period < MIN_MEMS_PERIOD_MS)
-//		return H1FR5_ERR_WrongParams;
-//
-//	// TODO: Check if CLI is enable or not
-//
-//	if (period > timeout)
-//		timeout = period;
-//
-//	long numTimes = timeout / period;
-//	stopStream = false;
-//
-//	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
-//		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
-//		function((char *)pcOutputString, 100);
-//
-//
-//		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
-////		if (PollingSleepCLISafe(period) != H1FR5_OK)
-////			break;
-//		vTaskDelay(pdMS_TO_TICKS(period));
-//		if (stopStream) {
-//			status = H1FR5_ERR_TERMINATED;
-//			break;
-//		}
-//	}
-//
-//	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
-//  sprintf((char *)pcOutputString, "\r\n");
-//	return status;
-//}
+static Module_Status StreamMemsToCLI(uint32_t Numofsamples, uint32_t timeout, SampleMemsToString function)
+{
+	Module_Status status = H1FR5_OK;
+	int8_t *pcOutputString = NULL;
+	uint32_t period = timeout / Numofsamples;
+	if (period < MIN_MEMS_PERIOD_MS)
+		return H1FR5_ERR_WrongParams;
+
+	// TODO: Check if CLI is enable or not
+	for (uint8_t chr = 0; chr < MSG_RX_BUF_SIZE; chr++) {
+			if (UARTRxBuf[PcPort - 1][chr] == '\r' ) {
+				UARTRxBuf[PcPort - 1][chr] = 0;
+			}
+		}
+	if (1 == flag) {
+		flag = 0;
+		static char *pcOKMessage = (int8_t*) "Stop stream !\n\r";
+		writePxITMutex(PcPort, pcOKMessage, strlen(pcOKMessage), 10);
+		return status;
+	}
+	if (period > timeout)
+		timeout = period;
+
+	long numTimes = timeout / period;
+	stopStream = false;
+
+	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+		function((char *)pcOutputString, 100);
+
+
+		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
+		if (PollingSleepCLISafe(period,Numofsamples) != H1FR5_OK)
+			break;
+	}
+
+	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+  sprintf((char *)pcOutputString, "\r\n");
+	return status;
+}
 
 void GPS(void *argument) {
 
@@ -771,25 +777,25 @@ void SampleHeightToString(char *cstring, size_t maxLen)
 }
 /*-----------------------------------------------------------*/
 
-//Module_Status StreamPositionToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SamplePositionToString);
-//}
-//
-//Module_Status StreamUTCToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SampleUTCToString);
-//}
-//
-//Module_Status StreamSpeedToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SampleSpeedToString);
-//}
-//
-//Module_Status StreamHeightToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SampleHeightToString);
-//}
+Module_Status StreamPositionToCLI(uint32_t period, uint32_t timeout)
+{
+	return StreamMemsToCLI(period, timeout, SamplePositionToString);
+}
+
+Module_Status StreamUTCToCLI(uint32_t period, uint32_t timeout)
+{
+	return StreamMemsToCLI(period, timeout, SampleUTCToString);
+}
+
+Module_Status StreamSpeedToCLI(uint32_t period, uint32_t timeout)
+{
+	return StreamMemsToCLI(period, timeout, SampleSpeedToString);
+}
+
+Module_Status StreamHeightToCLI(uint32_t period, uint32_t timeout)
+{
+	return StreamMemsToCLI(period, timeout, SampleHeightToString);
+}
 
 Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function)
  {
@@ -943,7 +949,6 @@ static bool StreamCommandParser(const int8_t *pcCommandString, const char **ppSe
 	return true;
 }
 
-
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString)
 {
 	const char *const positionCmdName = "position";
@@ -951,7 +956,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	const char *const speedCmdName = "speed";
 	const char *const heightCmdName = "height";
 
-	uint32_t period = 0;
+	uint32_t Numofsamples = 0;
 	uint32_t timeout = 0;
 	uint8_t port = 0;
 	uint8_t module = 0;
@@ -964,7 +969,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	// Make sure we return something
 	*pcWriteBuffer = '\0';
 
-	if (!StreamCommandParser(pcCommandString, &pSensName, &sensNameLen, &portOrCLI, &period, &timeout, &port, &module)) {
+	if (!StreamCommandParser(pcCommandString, &pSensName, &sensNameLen, &portOrCLI, &Numofsamples, &timeout, &port, &module)) {
 		snprintf((char *)pcWriteBuffer, xWriteBufferLen, "Invalid Arguments\r\n");
 		return pdFALSE;
 	}
@@ -972,46 +977,46 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	do {
 		if (!strncmp(pSensName, positionCmdName, strlen(positionCmdName))) {
 			if (portOrCLI) {
-//				StreamPositionToCLI(period, timeout);
+				StreamPositionToCLI(Numofsamples, timeout);
 
 			} else {
-//				StreamPositionToPort(port, module, period, timeout);
 
+				StreamToPort(port, module, Numofsamples, timeout, Position);
 			}
 
 		} else if (!strncmp(pSensName, utcCmdName, strlen(utcCmdName))) {
 			if (portOrCLI) {
-//				StreamUTCToCLI(period, timeout);
+				StreamUTCToCLI(Numofsamples, timeout);
 
 			} else {
-//				StreamUTCToPort(port, module, period, timeout);
 
+				StreamToPort(port, module, Numofsamples, timeout, UTC);
 			}
 
-		}
-		else if (!strncmp(pSensName, speedCmdName, strlen(speedCmdName))) {
+		} else if (!strncmp(pSensName, speedCmdName, strlen(speedCmdName))) {
 			if (portOrCLI) {
-//				StreamSpeedToCLI(period, timeout);
+				StreamSpeedToCLI(Numofsamples, timeout);
 
 			} else {
-//				StreamSpeedToPort(port, module, period, timeout);
 
+				StreamToPort(port, module, Numofsamples, timeout, Speed);
 			}
 
 		} else if (!strncmp(pSensName, heightCmdName, strlen(heightCmdName))) {
 			if (portOrCLI) {
-//				StreamHeightToCLI(period, timeout);
+				StreamHeightToCLI(Numofsamples, timeout);
 
 			} else {
-//				StreamHeightToPort(port, module, period, timeout);
 
+				StreamToPort(port, module, Numofsamples, timeout, Heigh);
 			}
 
 		} else {
-			snprintf((char *)pcWriteBuffer, xWriteBufferLen, "Invalid Arguments\r\n");
+			snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+					"Invalid Arguments\r\n");
 		}
 
-		snprintf((char *)pcWriteBuffer, xWriteBufferLen, "\r\n");
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "\r\n");
 		return pdFALSE;
 	} while (0);
 
