@@ -51,6 +51,11 @@ uint8_t tofMode ;
 /* Private function prototypes -----------------------------------------------*/
 void GPS(void *argument);
 void ExecuteMonitor(void);
+Module_Status SampleHeightToPort(uint8_t port,uint8_t module);
+Module_Status SampleSpeedToPort(uint8_t port,uint8_t module);
+Module_Status SampleUTCToPort(uint8_t port,uint8_t module);
+Module_Status SamplePositionToPort(uint8_t port,uint8_t module);
+static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout, SampleMemsToPort function);
 static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 //static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
@@ -473,11 +478,34 @@ void GPS(void *argument) {
 
 	/* Infinite loop */
 	for (;;) {
+		GPSHandel();
 		/*  */
 switch (tofMode) {
-	case SAMPLE_TEM:
+	case STREAM_TO_PORT:
+
+		switch (mode1) {
+			case Position:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SamplePositionToPort);
+				break;
+			case UTC:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SampleUTCToPort);
+					break;
+			case Speed:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SampleSpeedToPort);
+					break;
+			case Heigh:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SampleHeightToPort);
+					break;
+			default:
+				break;
+		}
 
 		break;
+
+		case STREAM_TO_Terminal:
+
+
+			break;
 	default:
 		break;
 }
@@ -515,6 +543,7 @@ static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Num
 			break;
 		}
 	}
+	tofMode=20;
 	return status;
 }
 
@@ -583,7 +612,7 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 
 	GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
 
-	if(module == myID){
+	if (module == myID || module == 0){
 			temp[0] =*((__IO uint8_t* )(&longdegree) + 3);
 			temp[1] =*((__IO uint8_t* )(&longdegree) + 2);
 			temp[2] =*((__IO uint8_t* )(&longdegree) + 1);
@@ -625,7 +654,7 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 
 	GetUTC(&hours, &min, &sec);
 
-	if(module == myID){
+	if (module == myID || module == 0){
 			temp[0] = hours;
 			temp[1] = min;
 			temp[2] = sec;
@@ -653,7 +682,7 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 
 	GetSpeed(&speedinch, &speedkm);
 
-	if(module == myID){
+	if (module == myID || module == 0){
 			temp[0] =*((__IO uint8_t* )(&speedinch) + 3);
 			temp[1] =*((__IO uint8_t* )(&speedinch) + 2);
 			temp[2] =*((__IO uint8_t* )(&speedinch) + 1);
@@ -692,7 +721,7 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 
 	GetHeight(&height);
 
-	if(module == myID){
+	if (module == myID || module == 0){
 			temp[0] =*((__IO uint8_t* )(&height) + 3);
 			temp[1] =*((__IO uint8_t* )(&height) + 2);
 			temp[2] =*((__IO uint8_t* )(&height) + 1);
@@ -762,31 +791,18 @@ void SampleHeightToString(char *cstring, size_t maxLen)
 //	return StreamMemsToCLI(period, timeout, SampleHeightToString);
 //}
 
-Module_Status StreamPositionToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function)
+Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function)
  {
-
-	StreamMemsToPort(port, module, Numofsamples, timeout, SamplePositionToPort);
-
-
+	Module_Status status = H1FR5_OK;
+	tofMode = STREAM_TO_PORT;
+	port2 = port;
+	module2 = module;
+	Numofsamples2 = Numofsamples;
+	timeout2 = timeout;
+	mode1 = function;
+	return status;
 }
-/*-----------------------------------------------------------*/
 
-Module_Status StreamUTCToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToPort(port, module, period, timeout, SampleUTCToPort);
-}
-/*-----------------------------------------------------------*/
-
-Module_Status StreamSpeedToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToPort(port, module, period, timeout, SampleSpeedToPort);
-}
-/*-----------------------------------------------------------*/
-
-Module_Status StreamHeightToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
-{
-	return StreamMemsToPort(port, module, period, timeout, SampleHeightToPort);
-}
 /*-----------------------------------------------------------*/
 void stopStreamMems(void)
 {
@@ -968,7 +984,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 //				StreamUTCToCLI(period, timeout);
 
 			} else {
-				StreamUTCToPort(port, module, period, timeout);
+//				StreamUTCToPort(port, module, period, timeout);
 
 			}
 
@@ -978,7 +994,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 //				StreamSpeedToCLI(period, timeout);
 
 			} else {
-				StreamSpeedToPort(port, module, period, timeout);
+//				StreamSpeedToPort(port, module, period, timeout);
 
 			}
 
@@ -987,7 +1003,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 //				StreamHeightToCLI(period, timeout);
 
 			} else {
-				StreamHeightToPort(port, module, period, timeout);
+//				StreamHeightToPort(port, module, period, timeout);
 
 			}
 

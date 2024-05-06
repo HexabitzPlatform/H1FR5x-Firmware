@@ -165,7 +165,7 @@ extern void ExecuteMonitor(void);
 
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
 void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport);
-
+Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function);
 void GPSHandel(void);
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
 Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
