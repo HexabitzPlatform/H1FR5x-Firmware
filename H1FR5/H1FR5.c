@@ -49,8 +49,14 @@ static bool stopStream = false;
 TaskHandle_t GPSTaskHandle = NULL;
 uint8_t tofMode ;
 /* Private function prototypes -----------------------------------------------*/
+static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t Port, SampleMemsToString function);
+void SampleToPositionString(char *cstring, size_t maxLen);
+void SampleToUTCString(char *cstring, size_t maxLen);
+void SampleToHeighString(char *cstring, size_t maxLen);
+void SampleToSpeedString(char *cstring, size_t maxLen);
 void GPS(void *argument);
 void ExecuteMonitor(void);
+void GPSHandel(void);
 Module_Status SampleHeightToPort(uint8_t port,uint8_t module);
 Module_Status SampleSpeedToPort(uint8_t port,uint8_t module);
 Module_Status SampleUTCToPort(uint8_t port,uint8_t module);
@@ -84,7 +90,7 @@ const CLI_Command_Definition_t StreamCommandDefinition = {
 const CLI_Command_Definition_t StopCommandDefinition = {
 	(const int8_t *) "stop",
 	(const int8_t *) "stop:\r\n Syntax: stop\r\n \
-\tStop the current streaming of MEMS values. r\n\r\n",
+\tStop the current streaming of values. r\n\r\n",
 	StopStreamCommand,
 	0
 };
@@ -486,34 +492,59 @@ void GPS(void *argument) {
 	for (;;) {
 		GPSHandel();
 		/*  */
-switch (tofMode) {
-	case STREAM_TO_PORT:
+		switch (tofMode) {
+		case STREAM_TO_PORT:
 
-		switch (mode1) {
+			switch (mode1) {
 			case Position:
-				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SamplePositionToPort);
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SamplePositionToPort);
 				break;
 			case UTC:
-				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SampleUTCToPort);
-					break;
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SampleUTCToPort);
+				break;
 			case Speed:
-				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SampleSpeedToPort);
-					break;
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SampleSpeedToPort);
+				break;
 			case Heigh:
-				StreamMemsToPort(port2, module2, Numofsamples2, timeout2, SampleHeightToPort);
-					break;
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SampleHeightToPort);
+				break;
 			default:
 				break;
-		}
+			}
 
-		break;
+			break;
 
 		case STREAM_TO_Terminal:
 
+			switch (mode1) {
+					case Position:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,SampleToPositionString);
+						break;
+					case UTC:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,
+								SampleToUTCString);
+						break;
+					case Speed:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,
+								SampleToSpeedString);
+						break;
+					case Heigh:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,
+								SampleToHeighString);
+						break;
+					default:
+						break;
+					}
+
+
 
 			break;
-	default:
-		break;
+		default:
+			break;
 }
 
 		taskYIELD();
@@ -781,22 +812,22 @@ Module_Status StreamPositionToCLI(uint32_t period, uint32_t timeout)
 {
 	return StreamMemsToCLI(period, timeout, SamplePositionToString);
 }
-
+/*-----------------------------------------------------------*/
 Module_Status StreamUTCToCLI(uint32_t period, uint32_t timeout)
 {
 	return StreamMemsToCLI(period, timeout, SampleUTCToString);
 }
-
+/*-----------------------------------------------------------*/
 Module_Status StreamSpeedToCLI(uint32_t period, uint32_t timeout)
 {
 	return StreamMemsToCLI(period, timeout, SampleSpeedToString);
 }
-
+/*-----------------------------------------------------------*/
 Module_Status StreamHeightToCLI(uint32_t period, uint32_t timeout)
 {
 	return StreamMemsToCLI(period, timeout, SampleHeightToString);
 }
-
+/*-----------------------------------------------------------*/
 Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function)
  {
 	Module_Status status = H1FR5_OK;
@@ -808,7 +839,92 @@ Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, 
 	mode1 = function;
 	return status;
 }
+/*-----------------------------------------------------------*/
+Module_Status StreamToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t port,All_Data function)
+ {
+	Module_Status status = H1FR5_OK;
+	tofMode = STREAM_TO_Terminal;
+	port3 = port;
+	Numofsamples3 = Numofsamples;
+	timeout3 = timeout;
+	mode1 = function;
+	return status;
 
+}
+/*-----------------------------------------------------------*/
+static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t Port, SampleMemsToString function)
+{
+	Module_Status status = H1FR5_OK;
+	int8_t *pcOutputString = NULL;
+	uint32_t period = timeout / Numofsamples;
+	if (period < MIN_MEMS_PERIOD_MS)
+		return H1FR5_ERR_WrongParams;
+
+	// TODO: Check if CLI is enable or not
+
+	if (period > timeout)
+		timeout = period;
+
+	long numTimes = timeout / period;
+	stopStream = false;
+
+	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+		function((char *)pcOutputString, 100);
+
+
+		writePxMutex(Port, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
+		if (PollingSleepCLISafe(period,Numofsamples) != H1FR5_OK)
+			break;
+	}
+
+	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+  sprintf((char *)pcOutputString, "\r\n");
+	tofMode=20;
+	return status;
+}
+/*-----------------------------------------------------------*/
+void SampleToPositionString(char *cstring, size_t maxLen)
+ {
+	float longdegree, latdegree;
+	char latindicator, longindicator;
+	GetPosition(&longdegree, &latdegree, &longindicator, &latindicator);
+	snprintf(cstring, maxLen,
+			"GPS: longdegree: %.2f , latdegree: %.2f , latdegree: %c  , latindicator: %c \r\n",
+			longdegree, latdegree, longindicator, latindicator);
+}
+/*-----------------------------------------------------------*/
+void SampleToUTCString(char *cstring, size_t maxLen)
+ {
+	uint8_t hours, min, sec;
+
+	GetUTC(&hours, &min, &sec);
+
+	snprintf(cstring, maxLen, "GPS: hours: %d , min: %d , sec: %d   \r\n",
+			hours, min, sec);
+
+}
+/*-----------------------------------------------------------*/
+void SampleToSpeedString(char *cstring, size_t maxLen)
+ {
+	float speedinch, speedkm;
+
+	GetSpeed(&speedinch, &speedkm);
+
+	snprintf(cstring, maxLen, "GPS: speedinch: %.2f , speedkm: %.2f \r\n",
+			speedinch, speedkm);
+
+}
+/*-----------------------------------------------------------*/
+void SampleToHeighString(char *cstring, size_t maxLen)
+ {
+	float height;
+
+	GetHeight(&height);
+
+	snprintf(cstring, maxLen, "GPS: height: %.2f \r\n", height);
+
+}
 /*-----------------------------------------------------------*/
 void stopStreamMems(void)
 {
