@@ -124,6 +124,13 @@ typedef enum {
 	Position,
 
 }All_Data;
+typedef enum {
+	Heigh_buf=0,
+	Speed_buf,
+	longdegree_buf,
+	latdegree_buf,
+
+}buffer_Data;
 /* Module_Status Type Definition */
 typedef enum {
 	H1FR5_OK =0,
@@ -162,6 +169,7 @@ extern void ExecuteMonitor(void);
  |								  APIs							          |  																 	|
 /* -----------------------------------------------------------------------
  */
+
 void GPSHandel(void);
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
 void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport);
@@ -171,6 +179,8 @@ Module_Status GetPosition(float * longdegree, float * latdegree, char *longindic
 Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
 Module_Status GetSpeed(float *speedinch, float *speedkm);
 Module_Status GetHeight(float *height);
+Module_Status StreamToBuffer(float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function);
+
 /* -----------------------------------------------------------------------
  |								Commands							      |															 	|
 /* -----------------------------------------------------------------------

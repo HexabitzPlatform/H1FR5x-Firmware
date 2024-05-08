@@ -36,6 +36,7 @@ uint8_t port3 ,module3,mode3;
 uint32_t Numofsamples2 ,timeout2;
 uint32_t Numofsamples3 ,timeout3;
 uint8_t flag ;
+uint8_t cont ;
 uint8_t tofMode ;
 /* Module exported parameters ------------------------------------------------*/
 module_param_t modParam[NUM_MODULE_PARAMS] ={{.paramPtr = NULL, .paramFormat =FMT_FLOAT, .paramName =""}};
@@ -50,6 +51,7 @@ TaskHandle_t GPSTaskHandle = NULL;
 uint8_t tofMode ;
 /* Private function prototypes -----------------------------------------------*/
 static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t Port, SampleMemsToString function);
+static Module_Status StreamToBuf( float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function);
 void SampleToPositionString(char *cstring, size_t maxLen);
 void SampleToUTCString(char *cstring, size_t maxLen);
 void SampleToHeighString(char *cstring, size_t maxLen);
@@ -601,9 +603,9 @@ void GPSHandel(void)
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator)
 {
 	Module_Status status = H1FR5_OK;
-	*longdegree = GPS_INFO.Longitude.Degree;
+	*longdegree = GPS_INFO.Longitude.Degree;// tol
 	*longindicator = GPS_INFO.Longitude.indicator;
-	*latdegree = GPS_INFO.Latitude.Degree;
+	*latdegree = GPS_INFO.Latitude.Degree;  // ug
 	*latindicator = GPS_INFO.Latitude.indicator;
 	return status;
 }
@@ -775,6 +777,61 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 
 			SendMessageToModule(module,CODE_PORT_FORWARD,sizeof(float)+1);
 		}
+	return status;
+}
+/*-----------------------------------------------------------*/
+Module_Status StreamToBuffer(float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function)
+{
+	return StreamToBuf(buffer, Numofsamples, timeout, function);
+}
+
+/*-----------------------------------------------------------*/
+
+static Module_Status StreamToBuf( float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function)
+ {
+	Module_Status status = H1FR5_OK;
+	uint32_t period = timeout / Numofsamples;
+	if (period < MIN_MEMS_PERIOD_MS)
+		return H1FR5_ERR_WrongParams;
+
+	// TODO: Check if CLI is enable or not
+
+	if (period > timeout)
+		timeout = period;
+
+	long numTimes = timeout / period;
+	stopStream = false;
+
+	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+			float sample,sample2;
+		    char D,D1;
+		switch (function) {
+			case longdegree_buf:
+				GetPosition(&sample, &sample2, &D1, &D);
+				break;
+			case Speed_buf:
+				GetSpeed(&sample2, &sample);
+						break;
+			case latdegree_buf:
+				GetPosition(&sample2, &sample, &D1, &D);
+						break;
+			case Heigh_buf:
+				GetHeight(&sample);
+						break;
+			default:
+				break;
+		}
+
+
+		buffer[cont] = sample;
+		cont++;
+
+		vTaskDelay(pdMS_TO_TICKS(period));
+		if (stopStream) {
+			status = H1FR5_ERR_TERMINATED;
+			break;
+		}
+	}
 	return status;
 }
 /*-----------------------------------------------------------*/
