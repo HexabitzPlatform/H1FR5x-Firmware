@@ -651,14 +651,14 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 	GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
 
 	if (module == myID || module == 0){
-			temp[0] =*((__IO uint8_t* )(&longdegree) + 3);
-			temp[1] =*((__IO uint8_t* )(&longdegree) + 2);
-			temp[2] =*((__IO uint8_t* )(&longdegree) + 1);
-			temp[3] =*((__IO uint8_t* )(&longdegree) + 0);
-			temp[4] =*((__IO uint8_t* )(&latdegree) + 3);
-			temp[5] =*((__IO uint8_t* )(&latdegree) + 2);
-			temp[6] =*((__IO uint8_t* )(&latdegree) + 1);
-			temp[7] =*((__IO uint8_t* )(&latdegree) + 0);
+			temp[0] =*((__IO uint8_t* )(&longdegree) + 0);
+			temp[1] =*((__IO uint8_t* )(&longdegree) + 1);
+			temp[2] =*((__IO uint8_t* )(&longdegree) + 2);
+			temp[3] =*((__IO uint8_t* )(&longdegree) + 3);
+			temp[4] =*((__IO uint8_t* )(&latdegree) + 0);
+			temp[5] =*((__IO uint8_t* )(&latdegree) + 1);
+			temp[6] =*((__IO uint8_t* )(&latdegree) + 2);
+			temp[7] =*((__IO uint8_t* )(&latdegree) + 3);
 			temp[8] =*((__IO uint8_t* )(&longindicator));
 			temp[9] =*((__IO uint8_t* )(&latindicator));
 
@@ -666,14 +666,14 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 		}
 		else{
 			messageParams[0] =FMT_FLOAT;
-			messageParams[1] =*((__IO uint8_t* )(&longdegree) + 3);
-			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 2);
-			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 0);
-			messageParams[5] =*((__IO uint8_t* )(&latdegree) + 3);
-			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 2);
-			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 1);
-			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 0);
+			messageParams[1] =*((__IO uint8_t* )(&longdegree) + 0);
+			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 1);
+			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 2);
+			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 3);
+			messageParams[5] =*((__IO uint8_t* )(&latdegree) + 0);
+			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 1);
+			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 2);
+			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 3);
 
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,11);
@@ -720,27 +720,27 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 	GetSpeed(&speedinch, &speedkm);
 
 	if (module == myID || module == 0){
-			temp[0] =*((__IO uint8_t* )(&speedinch) + 3);
-			temp[1] =*((__IO uint8_t* )(&speedinch) + 2);
-			temp[2] =*((__IO uint8_t* )(&speedinch) + 1);
-			temp[3] =*((__IO uint8_t* )(&speedinch) + 0);
-			temp[4] =*((__IO uint8_t* )(&speedkm) + 3);
-			temp[5] =*((__IO uint8_t* )(&speedkm) + 2);
-			temp[6] =*((__IO uint8_t* )(&speedkm) + 1);
-			temp[7] =*((__IO uint8_t* )(&speedkm) + 0);
+			temp[0] =*((__IO uint8_t* )(&speedinch) + 0);
+			temp[1] =*((__IO uint8_t* )(&speedinch) + 1);
+			temp[2] =*((__IO uint8_t* )(&speedinch) + 2);
+			temp[3] =*((__IO uint8_t* )(&speedinch) + 3);
+			temp[4] =*((__IO uint8_t* )(&speedkm) + 0);
+			temp[5] =*((__IO uint8_t* )(&speedkm) + 1);
+			temp[6] =*((__IO uint8_t* )(&speedkm) + 2);
+			temp[7] =*((__IO uint8_t* )(&speedkm) + 3);
 
 			writePxITMutex(port,(char* )&temp[0],8 * sizeof(uint8_t),10);
 		}
 		else{
 			messageParams[0] =FMT_FLOAT;
-			messageParams[1] =*((__IO uint8_t* )(&speedinch) + 3);
-			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 2);
-			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 0);
-			messageParams[5] =*((__IO uint8_t* )(&speedkm) + 3);
-			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 2);
-			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 1);
-			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 0);
+			messageParams[1] =*((__IO uint8_t* )(&speedinch) + 0);
+			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 1);
+			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 2);
+			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 3);
+			messageParams[5] =*((__IO uint8_t* )(&speedkm) + 0);
+			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 1);
+			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 2);
+			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 3);
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,9);
 		}
@@ -759,19 +759,19 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 	GetHeight(&height);
 
 	if (module == myID || module == 0){
-			temp[0] =*((__IO uint8_t* )(&height) + 3);
-			temp[1] =*((__IO uint8_t* )(&height) + 2);
-			temp[2] =*((__IO uint8_t* )(&height) + 1);
-			temp[3] =*((__IO uint8_t* )(&height) + 0);
+			temp[0] =*((__IO uint8_t* )(&height) + 0);
+			temp[1] =*((__IO uint8_t* )(&height) + 1);
+			temp[2] =*((__IO uint8_t* )(&height) + 2);
+			temp[3] =*((__IO uint8_t* )(&height) + 3);
 
 			writePxITMutex(port,(char* )&temp[0],4 * sizeof(uint8_t),10);
 		}
 		else{
 			messageParams[0] =FMT_FLOAT;
-			messageParams[1] =*((__IO uint8_t* )(&height) + 3);
-			messageParams[2] =*((__IO uint8_t* )(&height) + 2);
-			messageParams[3] =*((__IO uint8_t* )(&height) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&height) + 0);
+			messageParams[1] =*((__IO uint8_t* )(&height) + 0);
+			messageParams[2] =*((__IO uint8_t* )(&height) + 1);
+			messageParams[3] =*((__IO uint8_t* )(&height) + 2);
+			messageParams[4] =*((__IO uint8_t* )(&height) + 3);
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+1);
 		}
