@@ -778,7 +778,7 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 	return status;
 }
 /*-----------------------------------------------------------*/
-Module_Status StreamToBuffer(float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function)
+Module_Status StreamToBuffer(float *buffer,buffer_Data function, uint32_t Numofsamples, uint32_t timeout)
 {
 	return StreamToBuf(buffer, Numofsamples, timeout, function);
 }
@@ -883,7 +883,7 @@ Module_Status StreamHeightToCLI(uint32_t Numofsamples, uint32_t timeout)
 	return StreamMemsToCLI(Numofsamples, timeout, SampleHeightToString);
 }
 /*-----------------------------------------------------------*/
-Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function)
+Module_Status StreamToPort(uint8_t module,uint8_t port,All_Data function,  uint32_t Numofsamples, uint32_t timeout)
  {
 	Module_Status status = H1FR5_OK;
 	tofMode = STREAM_TO_PORT;
@@ -895,7 +895,7 @@ Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, 
 	return status;
 }
 /*-----------------------------------------------------------*/
-Module_Status StreamToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t port,All_Data function)
+Module_Status StreamToTerminal(uint8_t port,All_Data function,uint32_t Numofsamples, uint32_t timeout)
  {
 	Module_Status status = H1FR5_OK;
 	tofMode = STREAM_TO_Terminal;
@@ -1152,7 +1152,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 			} else {
 
-				StreamToPort(port, module, Numofsamples, timeout, Position);
+				StreamToPort(module, port, Numofsamples, timeout, Position);
 			}
 
 		} else if (!strncmp(pSensName, utcCmdName, strlen(utcCmdName))) {
@@ -1161,7 +1161,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 			} else {
 
-				StreamToPort(port, module, Numofsamples, timeout, UTC);
+				StreamToPort(module, port, Numofsamples, timeout, UTC);
 			}
 
 		} else if (!strncmp(pSensName, speedCmdName, strlen(speedCmdName))) {
@@ -1170,7 +1170,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 			} else {
 
-				StreamToPort(port, module, Numofsamples, timeout, Speed);
+				StreamToPort(module, port, Numofsamples, timeout, Speed);
 			}
 
 		} else if (!strncmp(pSensName, heightCmdName, strlen(heightCmdName))) {
@@ -1179,7 +1179,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 
 			} else {
 
-				StreamToPort(port, module, Numofsamples, timeout, Heigh);
+				StreamToPort(module, port, Numofsamples, timeout, Heigh);
 			}
 
 		} else {

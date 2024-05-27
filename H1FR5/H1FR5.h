@@ -173,13 +173,13 @@ extern void ExecuteMonitor(void);
 void GPSHandel(void);
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
 void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport);
-Module_Status StreamToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout,All_Data function);
-Module_Status StreamToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t port,All_Data function);
+Module_Status StreamToPort(uint8_t module,uint8_t port,All_Data function,  uint32_t Numofsamples, uint32_t timeout);
+Module_Status StreamToTerminal(uint8_t port,All_Data function,uint32_t Numofsamples, uint32_t timeout);
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
 Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
 Module_Status GetSpeed(float *speedinch, float *speedkm);
 Module_Status GetHeight(float *height);
-Module_Status StreamToBuffer(float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function);
+Module_Status StreamToBuffer(float *buffer,buffer_Data function, uint32_t Numofsamples, uint32_t timeout);
 
 /* -----------------------------------------------------------------------
  |								Commands							      |															 	|
