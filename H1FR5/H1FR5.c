@@ -648,7 +648,8 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 	char longindicator,latindicator;
 	static uint8_t temp[10];
 
-	GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
+
+	status=GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
 
 	if (module == myID || module == 0){
 			temp[0] =*((__IO uint8_t* )(&longdegree) + 0);
@@ -665,18 +666,22 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 			writePxITMutex(port,(char* )&temp[0],10 * sizeof(uint8_t),10);
 		}
 		else{
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
 			messageParams[0] =FMT_FLOAT;
-			messageParams[1] =*((__IO uint8_t* )(&longdegree) + 0);
-			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 1);
-			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 2);
-			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 3);
-			messageParams[5] =*((__IO uint8_t* )(&latdegree) + 0);
-			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 1);
-			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 2);
-			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 3);
+			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 0);
+			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 1);
+			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 2);
+			messageParams[5] =*((__IO uint8_t* )(&longdegree) + 3);
+			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 0);
+			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 1);
+			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 2);
+			messageParams[9] =*((__IO uint8_t* )(&latdegree) + 3);
 
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,11);
+			SendMessageToModule(module,CODE_READ_RESPONSE,12);
 		}
 	return status;
 }
@@ -689,7 +694,7 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 	uint8_t hours,min,sec;
 	static uint8_t temp[3];
 
-	GetUTC(&hours, &min, &sec);
+	status=GetUTC(&hours, &min, &sec);
 
 	if (module == myID || module == 0){
 			temp[0] = hours;
@@ -699,12 +704,16 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 			writePxITMutex(port,(char* )&temp[0],3 * sizeof(uint8_t),10);
 		}
 		else{
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
 			messageParams[0] = FMT_UINT8;
-			messageParams[1] = hours;
-			messageParams[2] = min;
-			messageParams[3] = sec;
+			messageParams[2] = hours;
+			messageParams[3] = min;
+			messageParams[4] = sec;
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,4);
+			SendMessageToModule(module,CODE_READ_RESPONSE,5);
 		}
 	return status;
 }
@@ -717,7 +726,7 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 	float speedinch,speedkm;
 	static uint8_t temp[8];
 
-	GetSpeed(&speedinch, &speedkm);
+	status=GetSpeed(&speedinch, &speedkm);
 
 	if (module == myID || module == 0){
 			temp[0] =*((__IO uint8_t* )(&speedinch) + 0);
@@ -732,17 +741,21 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 			writePxITMutex(port,(char* )&temp[0],8 * sizeof(uint8_t),10);
 		}
 		else{
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
 			messageParams[0] =FMT_FLOAT;
-			messageParams[1] =*((__IO uint8_t* )(&speedinch) + 0);
-			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 1);
-			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 2);
-			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 3);
-			messageParams[5] =*((__IO uint8_t* )(&speedkm) + 0);
-			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 1);
-			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 2);
-			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 3);
+			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 0);
+			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 1);
+			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 2);
+			messageParams[5] =*((__IO uint8_t* )(&speedinch) + 3);
+			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 0);
+			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 1);
+			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 2);
+			messageParams[9] =*((__IO uint8_t* )(&speedkm) + 3);
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,9);
+			SendMessageToModule(module,CODE_READ_RESPONSE,10);
 		}
 	return status;
 }
@@ -756,7 +769,7 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 	char longindicator,latindicator;
 	static uint8_t temp[4];
 
-	GetHeight(&height);
+	status=GetHeight(&height);
 
 	if (module == myID || module == 0){
 			temp[0] =*((__IO uint8_t* )(&height) + 0);
@@ -767,13 +780,17 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 			writePxITMutex(port,(char* )&temp[0],4 * sizeof(uint8_t),10);
 		}
 		else{
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
 			messageParams[0] =FMT_FLOAT;
-			messageParams[1] =*((__IO uint8_t* )(&height) + 0);
-			messageParams[2] =*((__IO uint8_t* )(&height) + 1);
-			messageParams[3] =*((__IO uint8_t* )(&height) + 2);
-			messageParams[4] =*((__IO uint8_t* )(&height) + 3);
+			messageParams[2] =*((__IO uint8_t* )(&height) + 0);
+			messageParams[3] =*((__IO uint8_t* )(&height) + 1);
+			messageParams[4] =*((__IO uint8_t* )(&height) + 2);
+			messageParams[5] =*((__IO uint8_t* )(&height) + 3);
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+1);
+			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+2);
 		}
 	return status;
 }
