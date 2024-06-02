@@ -1,5 +1,5 @@
 /*
- BitzOS (BOS) V0.3.3 - Copyright (C) 2017-2024 Hexabitz
+ BitzOS (BOS) V0.3.4 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
  
  File Name     : H1FR5.h
@@ -107,11 +107,30 @@
 
 #define NUM_MODULE_PARAMS						1
 
+#define SAMPLE_TEM              0
+#define SAMPLE_TO_PORT          1
+#define STREAM_TO_PORT          2
+#define STREAM_TO_Terminal      3
 /* Module EEPROM Variables */
 
 // Module Addressing Space 500 - 599
 #define _EE_MODULE							500		
 
+
+typedef enum {
+	Heigh=0,
+	Speed,
+	UTC,
+	Position,
+
+}All_Data;
+typedef enum {
+	Heigh_buf=0,
+	Speed_buf,
+	longdegree_buf,
+	latdegree_buf,
+
+}buffer_Data;
 /* Module_Status Type Definition */
 typedef enum {
 	H1FR5_OK =0,
@@ -151,14 +170,17 @@ extern void ExecuteMonitor(void);
 /* -----------------------------------------------------------------------
  */
 
+void GPSHandel(void);
 void SetupPortForRemoteBootloaderUpdate(uint8_t port);
 void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport);
-
-void GPSHandel(void);
+Module_Status StreamToPort(uint8_t module,uint8_t port,All_Data function,  uint32_t Numofsamples, uint32_t timeout);
+Module_Status StreamToTerminal(uint8_t port,All_Data function,uint32_t Numofsamples, uint32_t timeout);
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
 Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
 Module_Status GetSpeed(float *speedinch, float *speedkm);
 Module_Status GetHeight(float *height);
+Module_Status StreamToBuffer(float *buffer,buffer_Data function, uint32_t Numofsamples, uint32_t timeout);
+
 /* -----------------------------------------------------------------------
  |								Commands							      |															 	|
 /* -----------------------------------------------------------------------

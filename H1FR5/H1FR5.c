@@ -1,5 +1,5 @@
 /*
- BitzOS (BOS) V0.3.3 - Copyright (C) 2017-2024 Hexabitz
+ BitzOS (BOS) V0.3.4 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
 
  File Name     : H1FR5.c
@@ -29,7 +29,15 @@ UART_HandleTypeDef huart6;
 /* Exported variables */
 extern FLASH_ProcessTypeDef pFlash;
 extern uint8_t numOfRecordedSnippets;
-
+uint8_t port1, module1;
+uint8_t port2 ,module2,mode2,mode1;
+uint32_t Numofsamples1 ,timeout1;
+uint8_t port3 ,module3,mode3;
+uint32_t Numofsamples2 ,timeout2;
+uint32_t Numofsamples3 ,timeout3;
+uint8_t flag ;
+uint8_t cont ;
+uint8_t tofMode ;
 /* Module exported parameters ------------------------------------------------*/
 module_param_t modParam[NUM_MODULE_PARAMS] ={{.paramPtr = NULL, .paramFormat =FMT_FLOAT, .paramName =""}};
 #define MIN_MEMS_PERIOD_MS				100
@@ -38,11 +46,26 @@ module_param_t modParam[NUM_MODULE_PARAMS] ={{.paramPtr = NULL, .paramFormat =FM
 typedef Module_Status (*SampleMemsToPort)(uint8_t, uint8_t);
 typedef void (*SampleMemsToString)(char *, size_t);
 static bool stopStream = false;
+TaskHandle_t GPSTaskHandle = NULL;
+uint8_t tofMode ;
 /* Private function prototypes -----------------------------------------------*/
+static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t Port, SampleMemsToString function);
+static Module_Status StreamToBuf( float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function);
+void SampleToPositionString(char *cstring, size_t maxLen);
+void SampleToUTCString(char *cstring, size_t maxLen);
+void SampleToHeighString(char *cstring, size_t maxLen);
+void SampleToSpeedString(char *cstring, size_t maxLen);
+void GPS(void *argument);
 void ExecuteMonitor(void);
+void GPSHandel(void);
+Module_Status SampleHeightToPort(uint8_t port,uint8_t module);
+Module_Status SampleSpeedToPort(uint8_t port,uint8_t module);
+Module_Status SampleUTCToPort(uint8_t port,uint8_t module);
+Module_Status SamplePositionToPort(uint8_t port,uint8_t module);
+static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout, SampleMemsToPort function);
 static portBASE_TYPE SampleGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
-//static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
+static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function);
 static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout, SampleMemsToPort function);
 static portBASE_TYPE StopStreamCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString);
 /* Create CLI commands --------------------------------------------------------*/
@@ -68,7 +91,7 @@ const CLI_Command_Definition_t StreamCommandDefinition = {
 const CLI_Command_Definition_t StopCommandDefinition = {
 	(const int8_t *) "stop",
 	(const int8_t *) "stop:\r\n Syntax: stop\r\n \
-\tStop the current streaming of MEMS values. r\n\r\n",
+\tStop the current streaming of values. r\n\r\n",
 	StopStreamCommand,
 	0
 };
@@ -353,6 +376,8 @@ void Module_Peripheral_Init(void){
 				   { index_dma[i-1]=&(DMA1_Channel6->CNDTR); }
 		}
 
+	 xTaskCreate(GPS,(const char* ) "GPS",configMINIMAL_STACK_SIZE,NULL,osPriorityNormal - osPriorityIdle,&GPSTaskHandle);
+
 }
 
 /*-----------------------------------------------------------*/
@@ -390,7 +415,7 @@ void RegisterModuleCLICommands(void){
 
 /*-----------------------------------------------------------*/
 
-static Module_Status PollingSleepCLISafe(uint32_t period)
+static Module_Status PollingSleepCLISafe(uint32_t period, long Numofsamples)
 {
 	const unsigned DELTA_SLEEP_MS = 100; // milliseconds
 	long numDeltaDelay =  period / DELTA_SLEEP_MS;
@@ -404,6 +429,7 @@ static Module_Status PollingSleepCLISafe(uint32_t period)
 		{
 			if (UARTRxBuf[PcPort-1][chr] == '\r') {
 				UARTRxBuf[PcPort-1][chr] = 0;
+				flag=1;
 				return H1FR5_ERR_TERMINATED;
 			}
 		}
@@ -419,48 +445,119 @@ static Module_Status PollingSleepCLISafe(uint32_t period)
 
 /*-----------------------------------------------------------*/
 
-//static Module_Status StreamMemsToCLI(uint32_t period, uint32_t timeout, SampleMemsToString function)
-//{
-//	Module_Status status = H1FR5_OK;
-//	int8_t *pcOutputString = NULL;
-//
-//	if (period < MIN_MEMS_PERIOD_MS)
-//		return H1FR5_ERR_WrongParams;
-//
-//	// TODO: Check if CLI is enable or not
-//
-//	if (period > timeout)
-//		timeout = period;
-//
-//	long numTimes = timeout / period;
-//	stopStream = false;
-//
-//	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
-//		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
-//		function((char *)pcOutputString, 100);
-//
-//
-//		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
-////		if (PollingSleepCLISafe(period) != H1FR5_OK)
-////			break;
-//		vTaskDelay(pdMS_TO_TICKS(period));
-//		if (stopStream) {
-//			status = H1FR5_ERR_TERMINATED;
-//			break;
-//		}
-//	}
-//
-//	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
-//  sprintf((char *)pcOutputString, "\r\n");
-//	return status;
-//}
-
-/*-----------------------------------------------------------*/
-
-static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout, SampleMemsToPort function)
+static Module_Status StreamMemsToCLI(uint32_t Numofsamples, uint32_t timeout, SampleMemsToString function)
 {
 	Module_Status status = H1FR5_OK;
+	int8_t *pcOutputString = NULL;
+	uint32_t period = timeout / Numofsamples;
+	if (period < MIN_MEMS_PERIOD_MS)
+		return H1FR5_ERR_WrongParams;
 
+	// TODO: Check if CLI is enable or not
+	for (uint8_t chr = 0; chr < MSG_RX_BUF_SIZE; chr++) {
+			if (UARTRxBuf[PcPort - 1][chr] == '\r' ) {
+				UARTRxBuf[PcPort - 1][chr] = 0;
+			}
+		}
+	if (1 == flag) {
+		flag = 0;
+		static char *pcOKMessage = (int8_t*) "Stop stream !\n\r";
+		writePxITMutex(PcPort, pcOKMessage, strlen(pcOKMessage), 10);
+		return status;
+	}
+	if (period > timeout)
+		timeout = period;
+
+	long numTimes = timeout / period;
+	stopStream = false;
+
+	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+		function((char *)pcOutputString, 100);
+
+
+		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
+		if (PollingSleepCLISafe(period,Numofsamples) != H1FR5_OK)
+			break;
+	}
+
+	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+  sprintf((char *)pcOutputString, "\r\n");
+	return status;
+}
+
+void GPS(void *argument) {
+
+
+	/* Infinite loop */
+	for (;;) {
+		GPSHandel();
+		/*  */
+		switch (tofMode) {
+		case STREAM_TO_PORT:
+
+			switch (mode1) {
+			case Position:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SamplePositionToPort);
+				break;
+			case UTC:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SampleUTCToPort);
+				break;
+			case Speed:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SampleSpeedToPort);
+				break;
+			case Heigh:
+				StreamMemsToPort(port2, module2, Numofsamples2, timeout2,
+						SampleHeightToPort);
+				break;
+			default:
+				break;
+			}
+
+			break;
+
+		case STREAM_TO_Terminal:
+
+			switch (mode1) {
+					case Position:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,SampleToPositionString);
+						break;
+					case UTC:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,
+								SampleToUTCString);
+						break;
+					case Speed:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,
+								SampleToSpeedString);
+						break;
+					case Heigh:
+						StreamMemsToTerminal(Numofsamples3, timeout3, port3,
+								SampleToHeighString);
+						break;
+					default:
+						break;
+					}
+
+
+
+			break;
+		default:
+			break;
+}
+
+		taskYIELD();
+	}
+
+}
+/*-----------------------------------------------------------*/
+
+static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Numofsamples, uint32_t timeout, SampleMemsToPort function)
+{
+	Module_Status status = H1FR5_OK;
+	uint32_t period = timeout / Numofsamples;
 
 	if (period < MIN_MEMS_PERIOD_MS)
 		return H1FR5_ERR_WrongParams;
@@ -484,6 +581,7 @@ static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t per
 			break;
 		}
 	}
+	tofMode=20;
 	return status;
 }
 
@@ -504,9 +602,9 @@ void GPSHandel(void)
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator)
 {
 	Module_Status status = H1FR5_OK;
-	*longdegree = GPS_INFO.Longitude.Degree;
+	*longdegree = GPS_INFO.Longitude.Degree;// tol
 	*longindicator = GPS_INFO.Longitude.indicator;
-	*latdegree = GPS_INFO.Latitude.Degree;
+	*latdegree = GPS_INFO.Latitude.Degree;  // ug
 	*latindicator = GPS_INFO.Latitude.indicator;
 	return status;
 }
@@ -550,36 +648,40 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 	char longindicator,latindicator;
 	static uint8_t temp[10];
 
-	GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
 
-	if(module == myID){
-			temp[0] =*((__IO uint8_t* )(&longdegree) + 3);
-			temp[1] =*((__IO uint8_t* )(&longdegree) + 2);
-			temp[2] =*((__IO uint8_t* )(&longdegree) + 1);
-			temp[3] =*((__IO uint8_t* )(&longdegree) + 0);
-			temp[4] =*((__IO uint8_t* )(&latdegree) + 3);
-			temp[5] =*((__IO uint8_t* )(&latdegree) + 2);
-			temp[6] =*((__IO uint8_t* )(&latdegree) + 1);
-			temp[7] =*((__IO uint8_t* )(&latdegree) + 0);
+	status=GetPosition(&longdegree,&latdegree,&longindicator,&latindicator);
+
+	if (module == myID || module == 0){
+			temp[0] =*((__IO uint8_t* )(&longdegree) + 0);
+			temp[1] =*((__IO uint8_t* )(&longdegree) + 1);
+			temp[2] =*((__IO uint8_t* )(&longdegree) + 2);
+			temp[3] =*((__IO uint8_t* )(&longdegree) + 3);
+			temp[4] =*((__IO uint8_t* )(&latdegree) + 0);
+			temp[5] =*((__IO uint8_t* )(&latdegree) + 1);
+			temp[6] =*((__IO uint8_t* )(&latdegree) + 2);
+			temp[7] =*((__IO uint8_t* )(&latdegree) + 3);
 			temp[8] =*((__IO uint8_t* )(&longindicator));
 			temp[9] =*((__IO uint8_t* )(&latindicator));
 
 			writePxITMutex(port,(char* )&temp[0],10 * sizeof(uint8_t),10);
 		}
 		else{
-			messageParams[0] =port;
-			messageParams[1] =*((__IO uint8_t* )(&longdegree) + 3);
-			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 2);
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
+			messageParams[0] =FMT_FLOAT;
+			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 0);
 			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 0);
-			messageParams[5] =*((__IO uint8_t* )(&latdegree) + 3);
-			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 2);
+			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 2);
+			messageParams[5] =*((__IO uint8_t* )(&longdegree) + 3);
+			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 0);
 			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 1);
-			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 0);
-			messageParams[9] =*((__IO uint8_t* )(&longindicator) + 0);
-			messageParams[10] =*((__IO uint8_t* )(&latindicator) + 0);
+			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 2);
+			messageParams[9] =*((__IO uint8_t* )(&latdegree) + 3);
 
-			SendMessageToModule(module,CODE_PORT_FORWARD,11);
+
+			SendMessageToModule(module,CODE_READ_RESPONSE,12);
 		}
 	return status;
 }
@@ -592,9 +694,9 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 	uint8_t hours,min,sec;
 	static uint8_t temp[3];
 
-	GetUTC(&hours, &min, &sec);
+	status=GetUTC(&hours, &min, &sec);
 
-	if(module == myID){
+	if (module == myID || module == 0){
 			temp[0] = hours;
 			temp[1] = min;
 			temp[2] = sec;
@@ -602,12 +704,16 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 			writePxITMutex(port,(char* )&temp[0],3 * sizeof(uint8_t),10);
 		}
 		else{
-			messageParams[0] = port;
-			messageParams[1] = hours;
-			messageParams[2] = min;
-			messageParams[3] = sec;
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
+			messageParams[0] = FMT_UINT8;
+			messageParams[2] = hours;
+			messageParams[3] = min;
+			messageParams[4] = sec;
 
-			SendMessageToModule(module,CODE_PORT_FORWARD,4);
+			SendMessageToModule(module,CODE_READ_RESPONSE,5);
 		}
 	return status;
 }
@@ -620,32 +726,36 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 	float speedinch,speedkm;
 	static uint8_t temp[8];
 
-	GetSpeed(&speedinch, &speedkm);
+	status=GetSpeed(&speedinch, &speedkm);
 
-	if(module == myID){
-			temp[0] =*((__IO uint8_t* )(&speedinch) + 3);
-			temp[1] =*((__IO uint8_t* )(&speedinch) + 2);
-			temp[2] =*((__IO uint8_t* )(&speedinch) + 1);
-			temp[3] =*((__IO uint8_t* )(&speedinch) + 0);
-			temp[4] =*((__IO uint8_t* )(&speedkm) + 3);
-			temp[5] =*((__IO uint8_t* )(&speedkm) + 2);
-			temp[6] =*((__IO uint8_t* )(&speedkm) + 1);
-			temp[7] =*((__IO uint8_t* )(&speedkm) + 0);
+	if (module == myID || module == 0){
+			temp[0] =*((__IO uint8_t* )(&speedinch) + 0);
+			temp[1] =*((__IO uint8_t* )(&speedinch) + 1);
+			temp[2] =*((__IO uint8_t* )(&speedinch) + 2);
+			temp[3] =*((__IO uint8_t* )(&speedinch) + 3);
+			temp[4] =*((__IO uint8_t* )(&speedkm) + 0);
+			temp[5] =*((__IO uint8_t* )(&speedkm) + 1);
+			temp[6] =*((__IO uint8_t* )(&speedkm) + 2);
+			temp[7] =*((__IO uint8_t* )(&speedkm) + 3);
 
 			writePxITMutex(port,(char* )&temp[0],8 * sizeof(uint8_t),10);
 		}
 		else{
-			messageParams[0] =port;
-			messageParams[1] =*((__IO uint8_t* )(&speedinch) + 3);
-			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 2);
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
+			messageParams[0] =FMT_FLOAT;
+			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 0);
 			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 0);
-			messageParams[5] =*((__IO uint8_t* )(&speedkm) + 3);
-			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 2);
+			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 2);
+			messageParams[5] =*((__IO uint8_t* )(&speedinch) + 3);
+			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 0);
 			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 1);
-			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 0);
+			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 2);
+			messageParams[9] =*((__IO uint8_t* )(&speedkm) + 3);
 
-			SendMessageToModule(module,CODE_PORT_FORWARD,9);
+			SendMessageToModule(module,CODE_READ_RESPONSE,10);
 		}
 	return status;
 }
@@ -659,25 +769,84 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 	char longindicator,latindicator;
 	static uint8_t temp[4];
 
-	GetHeight(&height);
+	status=GetHeight(&height);
 
-	if(module == myID){
-			temp[0] =*((__IO uint8_t* )(&height) + 3);
-			temp[1] =*((__IO uint8_t* )(&height) + 2);
-			temp[2] =*((__IO uint8_t* )(&height) + 1);
-			temp[3] =*((__IO uint8_t* )(&height) + 0);
+	if (module == myID || module == 0){
+			temp[0] =*((__IO uint8_t* )(&height) + 0);
+			temp[1] =*((__IO uint8_t* )(&height) + 1);
+			temp[2] =*((__IO uint8_t* )(&height) + 2);
+			temp[3] =*((__IO uint8_t* )(&height) + 3);
 
 			writePxITMutex(port,(char* )&temp[0],4 * sizeof(uint8_t),10);
 		}
 		else{
-			messageParams[0] =port;
-			messageParams[1] =*((__IO uint8_t* )(&height) + 3);
-			messageParams[2] =*((__IO uint8_t* )(&height) + 2);
+			if (H1FR5_OK == status)
+					messageParams[1] = BOS_OK;
+				else
+					messageParams[1] = BOS_ERROR;
+			messageParams[0] =FMT_FLOAT;
+			messageParams[2] =*((__IO uint8_t* )(&height) + 0);
 			messageParams[3] =*((__IO uint8_t* )(&height) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&height) + 0);
+			messageParams[4] =*((__IO uint8_t* )(&height) + 2);
+			messageParams[5] =*((__IO uint8_t* )(&height) + 3);
 
-			SendMessageToModule(module,CODE_PORT_FORWARD,sizeof(float)+1);
+			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+2);
 		}
+	return status;
+}
+/*-----------------------------------------------------------*/
+Module_Status StreamToBuffer(float *buffer,buffer_Data function, uint32_t Numofsamples, uint32_t timeout)
+{
+	return StreamToBuf(buffer, Numofsamples, timeout, function);
+}
+
+/*-----------------------------------------------------------*/
+
+static Module_Status StreamToBuf( float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function)
+ {
+	Module_Status status = H1FR5_OK;
+	uint32_t period = timeout / Numofsamples;
+	if (period < MIN_MEMS_PERIOD_MS)
+		return H1FR5_ERR_WrongParams;
+
+	// TODO: Check if CLI is enable or not
+
+	if (period > timeout)
+		timeout = period;
+
+	long numTimes = timeout / period;
+	stopStream = false;
+
+	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+			float sample,sample2;
+		    char D,D1;
+		switch (function) {
+			case longdegree_buf:
+				GetPosition(&sample, &sample2, &D1, &D);
+				break;
+			case Speed_buf:
+				GetSpeed(&sample2, &sample);
+						break;
+			case latdegree_buf:
+				GetPosition(&sample2, &sample, &D1, &D);
+						break;
+			case Heigh_buf:
+				GetHeight(&sample);
+						break;
+			default:
+				break;
+		}
+
+
+		buffer[cont] = sample;
+		cont++;
+
+		vTaskDelay(pdMS_TO_TICKS(period));
+		if (stopStream) {
+			status = H1FR5_ERR_TERMINATED;
+			break;
+		}
+	}
 	return status;
 }
 /*-----------------------------------------------------------*/
@@ -711,47 +880,122 @@ void SampleHeightToString(char *cstring, size_t maxLen)
 }
 /*-----------------------------------------------------------*/
 
-//Module_Status StreamPositionToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SamplePositionToString);
-//}
-//
-//Module_Status StreamUTCToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SampleUTCToString);
-//}
-//
-//Module_Status StreamSpeedToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SampleSpeedToString);
-//}
-//
-//Module_Status StreamHeightToCLI(uint32_t period, uint32_t timeout)
-//{
-//	return StreamMemsToCLI(period, timeout, SampleHeightToString);
-//}
-
-Module_Status StreamPositionToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
+Module_Status StreamPositionToCLI(uint32_t Numofsamples, uint32_t timeout)
 {
-	return StreamMemsToPort(port, module, period, timeout, SamplePositionToPort);
+	return StreamMemsToCLI(Numofsamples, timeout, SamplePositionToString);
 }
 /*-----------------------------------------------------------*/
-
-Module_Status StreamUTCToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
+Module_Status StreamUTCToCLI(uint32_t Numofsamples, uint32_t timeout)
 {
-	return StreamMemsToPort(port, module, period, timeout, SampleUTCToPort);
+	return StreamMemsToCLI(Numofsamples, timeout, SampleUTCToString);
 }
 /*-----------------------------------------------------------*/
-
-Module_Status StreamSpeedToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
+Module_Status StreamSpeedToCLI(uint32_t Numofsamples, uint32_t timeout)
 {
-	return StreamMemsToPort(port, module, period, timeout, SampleSpeedToPort);
+	return StreamMemsToCLI(Numofsamples, timeout, SampleSpeedToString);
 }
 /*-----------------------------------------------------------*/
-
-Module_Status StreamHeightToPort(uint8_t port, uint8_t module, uint32_t period, uint32_t timeout)
+Module_Status StreamHeightToCLI(uint32_t Numofsamples, uint32_t timeout)
 {
-	return StreamMemsToPort(port, module, period, timeout, SampleHeightToPort);
+	return StreamMemsToCLI(Numofsamples, timeout, SampleHeightToString);
+}
+/*-----------------------------------------------------------*/
+Module_Status StreamToPort(uint8_t module,uint8_t port,All_Data function,  uint32_t Numofsamples, uint32_t timeout)
+ {
+	Module_Status status = H1FR5_OK;
+	tofMode = STREAM_TO_PORT;
+	port2 = port;
+	module2 = module;
+	Numofsamples2 = Numofsamples;
+	timeout2 = timeout;
+	mode1 = function;
+	return status;
+}
+/*-----------------------------------------------------------*/
+Module_Status StreamToTerminal(uint8_t port,All_Data function,uint32_t Numofsamples, uint32_t timeout)
+ {
+	Module_Status status = H1FR5_OK;
+	tofMode = STREAM_TO_Terminal;
+	port3 = port;
+	Numofsamples3 = Numofsamples;
+	timeout3 = timeout;
+	mode1 = function;
+	return status;
+
+}
+/*-----------------------------------------------------------*/
+static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t Port, SampleMemsToString function)
+{
+	Module_Status status = H1FR5_OK;
+	int8_t *pcOutputString = NULL;
+	uint32_t period = timeout / Numofsamples;
+	if (period < MIN_MEMS_PERIOD_MS)
+		return H1FR5_ERR_WrongParams;
+
+	// TODO: Check if CLI is enable or not
+
+	if (period > timeout)
+		timeout = period;
+
+	long numTimes = timeout / period;
+	stopStream = false;
+
+	while ((numTimes-- > 0) || (timeout >= MAX_MEMS_TIMEOUT_MS)) {
+		pcOutputString = FreeRTOS_CLIGetOutputBuffer();
+		function((char *)pcOutputString, 100);
+
+
+		writePxMutex(Port, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
+		if (PollingSleepCLISafe(period,Numofsamples) != H1FR5_OK)
+			break;
+	}
+
+	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
+  sprintf((char *)pcOutputString, "\r\n");
+	tofMode=20;
+	return status;
+}
+/*-----------------------------------------------------------*/
+void SampleToPositionString(char *cstring, size_t maxLen)
+ {
+	float longdegree, latdegree;
+	char latindicator, longindicator;
+	GetPosition(&longdegree, &latdegree, &longindicator, &latindicator);
+	snprintf(cstring, maxLen,
+			"GPS: longdegree: %.2f , latdegree: %.2f , latdegree: %c  , latindicator: %c \r\n",
+			longdegree, latdegree, longindicator, latindicator);
+}
+/*-----------------------------------------------------------*/
+void SampleToUTCString(char *cstring, size_t maxLen)
+ {
+	uint8_t hours, min, sec;
+
+	GetUTC(&hours, &min, &sec);
+
+	snprintf(cstring, maxLen, "GPS: hours: %d , min: %d , sec: %d   \r\n",
+			hours, min, sec);
+
+}
+/*-----------------------------------------------------------*/
+void SampleToSpeedString(char *cstring, size_t maxLen)
+ {
+	float speedinch, speedkm;
+
+	GetSpeed(&speedinch, &speedkm);
+
+	snprintf(cstring, maxLen, "GPS: speedinch: %.2f , speedkm: %.2f \r\n",
+			speedinch, speedkm);
+
+}
+/*-----------------------------------------------------------*/
+void SampleToHeighString(char *cstring, size_t maxLen)
+ {
+	float height;
+
+	GetHeight(&height);
+
+	snprintf(cstring, maxLen, "GPS: height: %.2f \r\n", height);
+
 }
 /*-----------------------------------------------------------*/
 void stopStreamMems(void)
@@ -893,7 +1137,6 @@ static bool StreamCommandParser(const int8_t *pcCommandString, const char **ppSe
 	return true;
 }
 
-
 static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBufferLen, const int8_t *pcCommandString)
 {
 	const char *const positionCmdName = "position";
@@ -901,7 +1144,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	const char *const speedCmdName = "speed";
 	const char *const heightCmdName = "height";
 
-	uint32_t period = 0;
+	uint32_t Numofsamples = 0;
 	uint32_t timeout = 0;
 	uint8_t port = 0;
 	uint8_t module = 0;
@@ -914,7 +1157,7 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	// Make sure we return something
 	*pcWriteBuffer = '\0';
 
-	if (!StreamCommandParser(pcCommandString, &pSensName, &sensNameLen, &portOrCLI, &period, &timeout, &port, &module)) {
+	if (!StreamCommandParser(pcCommandString, &pSensName, &sensNameLen, &portOrCLI, &Numofsamples, &timeout, &port, &module)) {
 		snprintf((char *)pcWriteBuffer, xWriteBufferLen, "Invalid Arguments\r\n");
 		return pdFALSE;
 	}
@@ -922,46 +1165,46 @@ static portBASE_TYPE StreamGPSCommand(int8_t *pcWriteBuffer, size_t xWriteBuffer
 	do {
 		if (!strncmp(pSensName, positionCmdName, strlen(positionCmdName))) {
 			if (portOrCLI) {
-//				StreamPositionToCLI(period, timeout);
+				StreamPositionToCLI(Numofsamples, timeout);
 
 			} else {
-				StreamPositionToPort(port, module, period, timeout);
 
+				StreamToPort(module, port, Numofsamples, timeout, Position);
 			}
 
 		} else if (!strncmp(pSensName, utcCmdName, strlen(utcCmdName))) {
 			if (portOrCLI) {
-//				StreamUTCToCLI(period, timeout);
+				StreamUTCToCLI(Numofsamples, timeout);
 
 			} else {
-				StreamUTCToPort(port, module, period, timeout);
 
+				StreamToPort(module, port, Numofsamples, timeout, UTC);
 			}
 
-		}
-		else if (!strncmp(pSensName, speedCmdName, strlen(speedCmdName))) {
+		} else if (!strncmp(pSensName, speedCmdName, strlen(speedCmdName))) {
 			if (portOrCLI) {
-//				StreamSpeedToCLI(period, timeout);
+				StreamSpeedToCLI(Numofsamples, timeout);
 
 			} else {
-				StreamSpeedToPort(port, module, period, timeout);
 
+				StreamToPort(module, port, Numofsamples, timeout, Speed);
 			}
 
 		} else if (!strncmp(pSensName, heightCmdName, strlen(heightCmdName))) {
 			if (portOrCLI) {
-//				StreamHeightToCLI(period, timeout);
+				StreamHeightToCLI(Numofsamples, timeout);
 
 			} else {
-				StreamHeightToPort(port, module, period, timeout);
 
+				StreamToPort(module, port, Numofsamples, timeout, Heigh);
 			}
 
 		} else {
-			snprintf((char *)pcWriteBuffer, xWriteBufferLen, "Invalid Arguments\r\n");
+			snprintf((char*) pcWriteBuffer, xWriteBufferLen,
+					"Invalid Arguments\r\n");
 		}
 
-		snprintf((char *)pcWriteBuffer, xWriteBufferLen, "\r\n");
+		snprintf((char*) pcWriteBuffer, xWriteBufferLen, "\r\n");
 		return pdFALSE;
 	} while (0);
 
