@@ -1,4 +1,0 @@
-../../Thirdparty/CMSIS/STM32G0xx/Include/core_cm0plus.h:985:34:__NVIC_SystemReset	1
-..\..\BOS\BOS_msgparser.c:115:6:BackEndTask	30
-..\..\BOS\BOS_msgparser.c:267:6:PxMessagingTask	233
-..\..\BOS\BOS_msgparser.c:1404:19:User_MessagingParser	1

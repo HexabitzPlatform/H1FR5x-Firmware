@@ -1,4 +1,0 @@
-..\..\H1FR5\H1FR5_gpio.c:22:6:GPIO_Init	1
-..\..\H1FR5\H1FR5_gpio.c:34:6:IND_LED_Init	1
-..\..\H1FR5\H1FR5_gpio.c:49:9:IsFactoryReset	3
-..\..\H1FR5\H1FR5_gpio.c:100:12:GetPortGPIOs	7
