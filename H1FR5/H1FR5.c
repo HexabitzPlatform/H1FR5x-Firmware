@@ -1,5 +1,5 @@
 /*
- BitzOS (BOS) V0.3.5 - Copyright (C) 2017-2024 Hexabitz
+ BitzOS (BOS) V0.3.6 - Copyright (C) 2017-2024 Hexabitz
  All rights reserved
 
  File Name     : H1FR5.c
@@ -581,7 +581,7 @@ static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Num
 			break;
 		}
 	}
-	module1 = DEFAULT;
+
 	return status;
 }
 
@@ -671,17 +671,18 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 				else
 					messageParams[1] = BOS_ERROR;
 			messageParams[0] =FMT_FLOAT;
-			messageParams[2] =*((__IO uint8_t* )(&longdegree) + 0);
-			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 2);
-			messageParams[5] =*((__IO uint8_t* )(&longdegree) + 3);
-			messageParams[6] =*((__IO uint8_t* )(&latdegree) + 0);
-			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 1);
-			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 2);
-			messageParams[9] =*((__IO uint8_t* )(&latdegree) + 3);
+			messageParams[2] =2;
+			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 0);
+			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 1);
+			messageParams[5] =*((__IO uint8_t* )(&longdegree) + 2);
+			messageParams[6] =*((__IO uint8_t* )(&longdegree) + 3);
+			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 0);
+			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 1);
+			messageParams[9] =*((__IO uint8_t* )(&latdegree) + 2);
+			messageParams[10] =*((__IO uint8_t* )(&latdegree) + 3);
 
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,12);
+			SendMessageToModule(module,CODE_READ_RESPONSE,13);
 		}
 	return status;
 }
@@ -709,11 +710,12 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 				else
 					messageParams[1] = BOS_ERROR;
 			messageParams[0] = FMT_UINT8;
-			messageParams[2] = hours;
-			messageParams[3] = min;
-			messageParams[4] = sec;
+			messageParams[2] = 3;
+			messageParams[3] = hours;
+			messageParams[4] = min;
+			messageParams[5] = sec;
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,5);
+			SendMessageToModule(module,CODE_READ_RESPONSE,6);
 		}
 	return status;
 }
@@ -746,16 +748,17 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 				else
 					messageParams[1] = BOS_ERROR;
 			messageParams[0] =FMT_FLOAT;
-			messageParams[2] =*((__IO uint8_t* )(&speedinch) + 0);
-			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 2);
-			messageParams[5] =*((__IO uint8_t* )(&speedinch) + 3);
-			messageParams[6] =*((__IO uint8_t* )(&speedkm) + 0);
-			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 1);
-			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 2);
-			messageParams[9] =*((__IO uint8_t* )(&speedkm) + 3);
+			messageParams[2] =2;
+			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 0);
+			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 1);
+			messageParams[5] =*((__IO uint8_t* )(&speedinch) + 2);
+			messageParams[6] =*((__IO uint8_t* )(&speedinch) + 3);
+			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 0);
+			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 1);
+			messageParams[9] =*((__IO uint8_t* )(&speedkm) + 2);
+			messageParams[10] =*((__IO uint8_t* )(&speedkm) + 3);
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,10);
+			SendMessageToModule(module,CODE_READ_RESPONSE,11);
 		}
 	return status;
 }
@@ -785,12 +788,13 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 				else
 					messageParams[1] = BOS_ERROR;
 			messageParams[0] =FMT_FLOAT;
-			messageParams[2] =*((__IO uint8_t* )(&height) + 0);
-			messageParams[3] =*((__IO uint8_t* )(&height) + 1);
-			messageParams[4] =*((__IO uint8_t* )(&height) + 2);
-			messageParams[5] =*((__IO uint8_t* )(&height) + 3);
+			messageParams[2] =1;
+			messageParams[3] =*((__IO uint8_t* )(&height) + 0);
+			messageParams[4] =*((__IO uint8_t* )(&height) + 1);
+			messageParams[5] =*((__IO uint8_t* )(&height) + 2);
+			messageParams[6] =*((__IO uint8_t* )(&height) + 3);
 
-			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+2);
+			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+3);
 		}
 	return status;
 }
@@ -952,7 +956,7 @@ static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeou
 
 	memset((char *) pcOutputString, 0, configCOMMAND_INT_MAX_OUTPUT_SIZE);
   sprintf((char *)pcOutputString, "\r\n");
-	module1 = DEFAULT;
+
 	return status;
 }
 /*-----------------------------------------------------------*/
