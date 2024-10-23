@@ -26,7 +26,7 @@ int main(void){
 
 /* User Task */
 void UserTask(void *argument){
-
+HAL_GPIO_WritePin(_IND_LED_PORT, _IND_LED_PIN, 1);
 	// put your code here, to run repeatedly.
 	while(1){
 
