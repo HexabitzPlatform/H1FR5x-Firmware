@@ -219,6 +219,11 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>Thirdparty/EEPROM_Emul</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/H01R0x-Firmware/Thirdparty/EEPROM_Emul</locationURI>
+		</link>
+		<link>
 			<name>Thirdparty/Middleware</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
