@@ -23,7 +23,8 @@ extern uint8_t UARTRxBufIndex[NumOfPorts];
 
 extern TaskHandle_t xCommandConsoleTaskHandle; // CLI Task handler.
 
-
+uint16_t PacketLength = 0;
+uint8_t count = 0;
 /******************************************************************************/
 /*            Cortex-M0 Processor Interruption and Exception Handlers         */
 /******************************************************************************/
@@ -58,6 +59,29 @@ void SysTick_Handler(void){
 /* please refer to the startup file (startup_stm32f0xx.s).                    */
 /******************************************************************************/
 
+ /* Use of HAL_UARTEx_ReceiveToIdle_DMA service, will generate calls to
+    user defined HAL_UARTEx_RxEventCallback callback for each occurrence of
+     following events :
+     - HT (Half Transfer) : Half of Rx buffer is filled)
+     - TC (Transfer Complete) : Rx buffer is full.
+       (In case of Circular DMA, reception could go on, and next reception data will be stored
+       in index 0 of reception buffer by DMA).
+     - Idle Event on Rx line : Triggered when RX line has been in idle state (normally high state)
+       for 1 frame time, after last received byte. */
+
+ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size){
+ 	extern TaskHandle_t BackEndTaskHandle;
+
+ 	PacketLength =Size;
+ 	count++;
+
+ 	/* Notify backend task */
+ 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+ 	vTaskNotifyGiveFromISR(BackEndTaskHandle,&xHigherPriorityTaskWoken);
+ 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+
+ }
+
 /**
  * @brief This function handles USART1 global interrupt / USART1 wake-up interrupt through EXTI line 25.
  */
@@ -68,6 +92,19 @@ void USART1_IRQHandler(void){
 	HAL_UART_IRQHandler(&huart1);
 #endif
 	
+	/* Fix problem stuck CPU in UART IRQhandler because of error on UART bus through use
+	 * HAL_UART_Transmit_IT() ,this prevented the TXFNFIE flag from being cleared which caused this problem
+	 */
+	if( (READ_BIT(huart1.Instance->CR1, USART_CR1_TXEIE_TXFNFIE) == USART_CR1_TXEIE_TXFNFIE_Msk) &&
+			(huart1.gState == HAL_UART_STATE_READY))
+	{
+	      /* Disable the UART Transmit Data Register Empty Interrupt */
+	      ATOMIC_CLEAR_BIT(huart1.Instance->CR1, USART_CR1_TXEIE_TXFNFIE);
+
+	      /* Enable the UART Transmit Complete Interrupt */
+	      ATOMIC_SET_BIT(huart1.Instance->CR1, USART_CR1_TCIE);
+	}
+
 	/* If lHigherPriorityTaskWoken is now equal to pdTRUE, then a context
 	 switch should be performed before the interrupt exists.  That ensures the
 	 unblocked (higher priority) task is returned to immediately. */
@@ -86,6 +123,16 @@ void USART2_LPUART2_IRQHandler(void){
 	HAL_UART_IRQHandler(&huart2);
 #endif
 	
+	if( (READ_BIT(huart2.Instance->CR1, USART_CR1_TXEIE_TXFNFIE) == USART_CR1_TXEIE_TXFNFIE_Msk) &&
+			(huart2.gState == HAL_UART_STATE_READY))
+	{
+	      /* Disable the UART Transmit Data Register Empty Interrupt */
+	      ATOMIC_CLEAR_BIT(huart2.Instance->CR1, USART_CR1_TXEIE_TXFNFIE);
+
+	      /* Enable the UART Transmit Complete Interrupt */
+	      ATOMIC_SET_BIT(huart2.Instance->CR1, USART_CR1_TCIE);
+	}
+
 	/* If lHigherPriorityTaskWoken is now equal to pdTRUE, then a context
 	 switch should be performed before the interrupt exists.  That ensures the
 	 unblocked (higher priority) task is returned to immediately. */
@@ -114,6 +161,46 @@ void USART3_4_5_6_LPUART1_IRQHandler(void){
 	HAL_UART_IRQHandler(&huart6);
 #endif
 	
+	if( (READ_BIT(huart3.Instance->CR1, USART_CR1_TXEIE_TXFNFIE) == USART_CR1_TXEIE_TXFNFIE_Msk) &&
+			(huart3.gState == HAL_UART_STATE_READY))
+	{
+	      /* Disable the UART Transmit Data Register Empty Interrupt */
+	      ATOMIC_CLEAR_BIT(huart3.Instance->CR1, USART_CR1_TXEIE_TXFNFIE);
+
+	      /* Enable the UART Transmit Complete Interrupt */
+	      ATOMIC_SET_BIT(huart3.Instance->CR1, USART_CR1_TCIE);
+	}
+
+	else if( (READ_BIT(huart4.Instance->CR1, USART_CR1_TXEIE_TXFNFIE) == USART_CR1_TXEIE_TXFNFIE_Msk) &&
+			(huart4.gState == HAL_UART_STATE_READY))
+	{
+	      /* Disable the UART Transmit Data Register Empty Interrupt */
+	      ATOMIC_CLEAR_BIT(huart4.Instance->CR1, USART_CR1_TXEIE_TXFNFIE);
+
+	      /* Enable the UART Transmit Complete Interrupt */
+	      ATOMIC_SET_BIT(huart4.Instance->CR1, USART_CR1_TCIE);
+	}
+
+	else if( (READ_BIT(huart5.Instance->CR1, USART_CR1_TXEIE_TXFNFIE) == USART_CR1_TXEIE_TXFNFIE_Msk) &&
+			(huart5.gState == HAL_UART_STATE_READY))
+	{
+	      /* Disable the UART Transmit Data Register Empty Interrupt */
+	      ATOMIC_CLEAR_BIT(huart5.Instance->CR1, USART_CR1_TXEIE_TXFNFIE);
+
+	      /* Enable the UART Transmit Complete Interrupt */
+	      ATOMIC_SET_BIT(huart5.Instance->CR1, USART_CR1_TCIE);
+	}
+
+	else if( (READ_BIT(huart6.Instance->CR1, USART_CR1_TXEIE_TXFNFIE) == USART_CR1_TXEIE_TXFNFIE_Msk) &&
+			(huart6.gState == HAL_UART_STATE_READY))
+	{
+	      /* Disable the UART Transmit Data Register Empty Interrupt */
+	      ATOMIC_CLEAR_BIT(huart6.Instance->CR1, USART_CR1_TXEIE_TXFNFIE);
+
+	      /* Enable the UART Transmit Complete Interrupt */
+	      ATOMIC_SET_BIT(huart6.Instance->CR1, USART_CR1_TCIE);
+	}
+
 	/* If lHigherPriorityTaskWoken is now equal to pdTRUE, then a context
 	 switch should be performed before the interrupt exists.  That ensures the
 	 unblocked (higher priority) task is returned to immediately. */
@@ -203,14 +290,16 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 	/* Resume streaming DMA for this UART port */
 	uint8_t port =GetPort(huart);
 	if(portStatus[port] == STREAM){
-		HAL_UART_Receive_DMA(huart,(uint8_t* )(&(dmaStreamDst[port - 1]->Instance->TDR)),huart->hdmarx->Instance->CNDTR);
+//		HAL_UART_Receive_DMA(huart,(uint8_t* )(&(dmaStreamDst[port - 1]->Instance->TDR)),huart->hdmarx->Instance->CNDTR);
+		HAL_UARTEx_ReceiveToIdle_DMA(huart,(uint8_t* )(&(dmaStreamDst[port - 1]->Instance->TDR)),huart->hdmarx->Instance->CNDTR);
 		/* Or parse the circular buffer and restart messaging DMA for this port */
 	}
 	else{
 		index_input[port - 1] = 0;
 		index_process[port - 1] = 0;
 		memset((uint8_t* )&UARTRxBuf[port - 1], 0, MSG_RX_BUF_SIZE);
-		HAL_UART_Receive_DMA(huart,(uint8_t* )&UARTRxBuf[port - 1] ,MSG_RX_BUF_SIZE);
+//		HAL_UART_Receive_DMA(huart,(uint8_t* )&UARTRxBuf[port - 1] ,MSG_RX_BUF_SIZE);
+		HAL_UARTEx_ReceiveToIdle_DMA(huart,(uint8_t* )&UARTRxBuf[port - 1] ,MSG_RX_BUF_SIZE);
 		MsgDMAStopped[port - 1] = true;		// Set a flag here and let the backend task restart DMA after parsing the buffer	
 	}
 }
