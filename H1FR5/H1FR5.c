@@ -162,78 +162,122 @@ void SystemClock_Config(void){
 
 /*-----------------------------------------------------------*/
 
+/* --- Save Command Topology in Flash RO --- */
 
-/* --- Save array topology and Command Snippets in Flash RO --- 
- */
-uint8_t SaveToRO(void){
-	BOS_Status result =BOS_OK;
-	HAL_StatusTypeDef FlashStatus =HAL_OK;
-	uint16_t add =8;
+uint8_t SaveTopologyToRO(void)
+{
+	HAL_StatusTypeDef flashStatus =HAL_OK;
+	/* flashAdd is initialized with 8 because the first memory room in topology page
+	 * is reserved for module's ID */
+	uint16_t flashAdd = 8;
     uint16_t temp =0;
-	uint8_t snipBuffer[sizeof(snippet_t) + 1] ={0};
-	
+
+    /* Unlock the FLASH control register access */
 	HAL_FLASH_Unlock();
-	/* Erase RO area */
-	FLASH_PageErase(FLASH_BANK_1,RO_START_ADDRESS);
+
+	/* Erase Topology page */
+	FLASH_PageErase(FLASH_BANK_2,TOPOLOGY_PAGE_NUM);
+
+	/* Wait for an Erase operation to complete */
+	flashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
+
+	if(flashStatus != HAL_OK){
+		/* return FLASH error code */
+		return pFlash.ErrorCode;
+	}
+
+	else{
+		/* Operation is completed, disable the PER Bit */
+		CLEAR_BIT(FLASH->CR,FLASH_CR_PER);
+	}
+
+	/* Save module's ID and topology */
+	if(myID){
+
+		/* Save module's ID */
+		temp =(uint16_t )(N << 8) + myID;
+
+		/* Save module's ID in Flash memory */
+		HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,TOPOLOGY_START_ADDRESS,temp);
+
+		/* Wait for a Write operation to complete */
+		flashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
+
+		if(flashStatus != HAL_OK){
+			/* return FLASH error code */
+			return pFlash.ErrorCode;
+		}
+
+		else{
+			/* If the program operation is completed, disable the PG Bit */
+			CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
+		}
+
+		/* Save topology */
+		for(uint8_t row =1; row <= N; row++){
+			for(uint8_t column =0; column <= MaxNumOfPorts; column++){
+				/* Check the module serial number
+				 * Note: there isn't a module has serial number 0
+				 */
+				if(array[row - 1][0]){
+					/* Save each element in topology array in Flash memory */
+					HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,TOPOLOGY_START_ADDRESS + flashAdd,array[row - 1][column]);
+					/* Wait for a Write operation to complete */
+					flashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
+					if(flashStatus != HAL_OK){
+						/* return FLASH error code */
+						return pFlash.ErrorCode;
+					}
+					else{
+						/* If the program operation is completed, disable the PG Bit */
+						CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
+						/* update new flash memory address */
+						flashAdd += 8;
+					}
+				}
+			}
+		}
+	}
+	/* Lock the FLASH control register access */
+	HAL_FLASH_Lock();
+}
+
+/*-----------------------------------------------------------*/
+
+/* --- Save Command Snippets in Flash RO --- */
+
+uint8_t SaveSnippetsToRO(void)
+{
+	HAL_StatusTypeDef FlashStatus =HAL_OK;
+    uint8_t snipBuffer[sizeof(snippet_t) + 1] ={0};
+
+    /* Unlock the FLASH control register access */
+	HAL_FLASH_Unlock();
+    /* Erase Snippets page */
+	FLASH_PageErase(FLASH_BANK_2,SNIPPETS_PAGE_NUM);
+	/* Wait for an Erase operation to complete */
 	FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
-	FLASH_PageErase(FLASH_BANK_1,RO_MID_ADDRESS);
-	//TOBECHECKED
-	FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
+
 	if(FlashStatus != HAL_OK){
+		/* return FLASH error code */
 		return pFlash.ErrorCode;
 	}
 	else{
 		/* Operation is completed, disable the PER Bit */
 		CLEAR_BIT(FLASH->CR,FLASH_CR_PER);
 	}
-	
-	/* Save number of modules and myID */
-	if(myID){
-		temp =(uint16_t )(N << 8) + myID;
-		//HAL_FLASH_Program(FLASH_TYPEPROGRAM_HALFWORD,RO_START_ADDRESS,temp);
-		HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,RO_START_ADDRESS,temp);
-		//TOBECHECKED
-		FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
-		if(FlashStatus != HAL_OK){
-			return pFlash.ErrorCode;
-		}
-		else{
-			/* If the program operation is completed, disable the PG Bit */
-			CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
-		}
-		
-		/* Save topology */
-		for(uint8_t i =1; i <= N; i++){
-			for(uint8_t j =0; j <= MaxNumOfPorts; j++){
-				if(array[i - 1][0]){
 
-          	HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,RO_START_ADDRESS + add,array[i - 1][j]);
-				 //HALFWORD 	//TOBECHECKED
-					FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
-					if(FlashStatus != HAL_OK){
-						return pFlash.ErrorCode;
-					}
-					else{
-						/* If the program operation is completed, disable the PG Bit */
-						CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
-						add +=8;
-					}
-				}
-			}
-		}
-	}
-	
-	// Save Command Snippets
-	int currentAdd = RO_MID_ADDRESS;
-	for(uint8_t s =0; s < numOfRecordedSnippets; s++){
-		if(snippets[s].cond.conditionType){
-			snipBuffer[0] =0xFE;		// A marker to separate Snippets
-			memcpy((uint32_t* )&snipBuffer[1],(uint8_t* )&snippets[s],sizeof(snippet_t));
-			// Copy the snippet struct buffer (20 x numOfRecordedSnippets). Note this is assuming sizeof(snippet_t) is even.
+	/* Save Command Snippets */
+	int currentAdd = SNIPPETS_START_ADDRESS;
+	for(uint8_t index = 0; index < numOfRecordedSnippets; index++){
+		/* Check if Snippet condition is true or false */
+		if(snippets[index].cond.conditionType){
+			/* A marker to separate Snippets */
+			snipBuffer[0] =0xFE;
+			memcpy((uint32_t* )&snipBuffer[1],(uint8_t* )&snippets[index],sizeof(snippet_t));
+			/* Copy the snippet struct buffer (20 x numOfRecordedSnippets). Note this is assuming sizeof(snippet_t) is even */
 			for(uint8_t j =0; j < (sizeof(snippet_t)/4); j++){
 				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )&snipBuffer[j*8]);
-				//HALFWORD
-				//TOBECHECKED
 				FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
 				if(FlashStatus != HAL_OK){
 					return pFlash.ErrorCode;
@@ -244,11 +288,9 @@ uint8_t SaveToRO(void){
 					currentAdd +=8;
 				}
 			}
-			// Copy the snippet commands buffer. Always an even number. Note the string termination char might be skipped
-			for(uint8_t j =0; j < ((strlen(snippets[s].cmd) + 1)/4); j++){
-				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )(snippets[s].cmd + j*4 ));
-				//HALFWORD
-				//TOBECHECKED
+			/* Copy the snippet commands buffer. Always an even number. Note the string termination char might be skipped */
+			for(uint8_t j = 0; j < ((strlen(snippets[index].cmd) + 1)/4); j++){
+				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )(snippets[index].cmd + j*4 ));
 				FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
 				if(FlashStatus != HAL_OK){
 					return pFlash.ErrorCode;
@@ -256,27 +298,26 @@ uint8_t SaveToRO(void){
 				else{
 					/* If the program operation is completed, disable the PG Bit */
 					CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
-					currentAdd +=8;
+					currentAdd += 8;
 				}
 			}
 		}
 	}
-	
+	/* Lock the FLASH control register access */
 	HAL_FLASH_Lock();
-	
-	return result;
 }
 
+/*-----------------------------------------------------------*/
 
-/* --- Clear array topology in SRAM and Flash RO --- 
- */
+/* --- Clear array topology in SRAM and Flash RO --- */
+
 uint8_t ClearROtopology(void){
 	// Clear the array 
 	memset(array,0,sizeof(array));
 	N =1;
 	myID =0;
 	
-	return SaveToRO();
+	return SaveTopologyToRO();
 }
 /*-----------------------------------------------------------*/
 
