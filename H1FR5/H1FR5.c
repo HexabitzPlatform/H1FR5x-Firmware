@@ -101,63 +101,53 @@ const CLI_Command_Definition_t StopCommandDefinition = {
  */
 
 /**
- * @brief  System Clock Configuration
- *         The system Clock is configured as follow : 
- *            System Clock source            = PLL (HSE)
- *            SYSCLK(Hz)                     = 48000000
- *            HCLK(Hz)                       = 48000000
- *            AHB Prescaler                  = 1
- *            APB1 Prescaler                 = 1
- *            HSE Frequency(Hz)              = 8000000
- *            PREDIV                         = 1
- *            PLLMUL                         = 6
- *            Flash Latency(WS)              = 1
- * @param  None
- * @retval None
- */
+* @brief  System Clock Configuration
+*         This function configures the system clock as follows:
+*            - System Clock source            = PLL (HSE)
+*            - SYSCLK(Hz)                     = 64000000
+*            - HCLK(Hz)                       = 64000000
+*            - AHB Prescaler                  = 1
+*            - APB1 Prescaler                 = 1
+*            - HSE Frequency(Hz)              = 8000000
+*            - PLLM                           = 1
+*            - PLLN                           = 16
+*            - PLLP                           = 2
+*            - Flash Latency(WS)              = 2
+*            - Clock Source for UART1,UART2,UART3 = 16MHz (HSI)
+* @param  None
+* @retval None
+*/
 void SystemClock_Config(void){
-	  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-	  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-	  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-	  /** Configure the main internal regulator output voltage
-	  */
-	  HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
-	  /** Initializes the RCC Oscillators according to the specified parameters
-	  * in the RCC_OscInitTypeDef structure.
-	  */
-	  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
-	  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-	  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-	  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-	  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-	  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
-	  RCC_OscInitStruct.PLL.PLLN = 12;
-	  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-	  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
-	  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
-	 HAL_RCC_OscConfig(&RCC_OscInitStruct);
+   /** Configure the main internal regulator output voltage */
+   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-	  /** Initializes the CPU, AHB and APB buses clocks
-	  */
-	  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-	                              |RCC_CLOCKTYPE_PCLK1;
-	  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-	  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-	  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+   /** Initializes the RCC Oscillators according to the specified parameters
+    * in the RCC_OscInitTypeDef structure.
+    */
+   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSE; // Enable both HSI and HSE oscillators
+   RCC_OscInitStruct.HSEState = RCC_HSE_ON; // Enable HSE (External High-Speed Oscillator)
+   RCC_OscInitStruct.HSIState = RCC_HSI_ON; // Enable HSI (Internal High-Speed Oscillator)
+   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1; // No division on HSI
+   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT; // Default calibration value for HSI
+   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON; // Enable PLL
+   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE; // Set PLL source to HSE
+   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1; // Prescaler for PLL input
+   RCC_OscInitStruct.PLL.PLLN = 16; // Multiplication factor for PLL
+   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2; // PLLP division factor
+   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2; // PLLQ division factor
+   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2; // PLLR division factor
+   HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
-	 HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1);
+   /** Initializes the CPU, AHB and APB buses clocks */
+   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
+   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK; // Select PLL as the system clock source
+   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1; // AHB Prescaler set to 1
+   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1; // APB1 Prescaler set to 1
 
-	  /** Initializes the peripherals clocks
-	  */
-	  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_USART2;
-	  PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
-	  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
-	  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
-
-
-	  HAL_NVIC_SetPriority(SysTick_IRQn,0,0);
-	
+   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2); // Configure system clocks with flash latency of 2 WS
 }
 
 /*-----------------------------------------------------------*/
