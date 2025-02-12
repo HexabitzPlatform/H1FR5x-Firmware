@@ -18,6 +18,7 @@ uint8_t* error_restart_message = "Restarting...\r\n";
 /* External variables --------------------------------------------------------*/
 extern uint8_t UARTRxBuf[NumOfPorts][MSG_RX_BUF_SIZE];
 extern uint8_t UARTRxBufIndex[NumOfPorts];
+extern uint8_t WakeupFromStopFlag;
 
 /* External function prototypes ----------------------------------------------*/
 
@@ -302,6 +303,27 @@ void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart){
 		HAL_UARTEx_ReceiveToIdle_DMA(huart,(uint8_t* )&UARTRxBuf[port - 1] ,MSG_RX_BUF_SIZE);
 		MsgDMAStopped[port - 1] = true;		// Set a flag here and let the backend task restart DMA after parsing the buffer	
 	}
+}
+
+/*-----------------------------------------------------------*/
+/**
+  * @brief UART wakeup from Stop mode callback
+  * @param huart: uart handle
+  * @retval None
+  */
+void HAL_UARTEx_WakeupCallback(UART_HandleTypeDef *huart) {
+
+	WakeupFromStopFlag = 1;
+
+	if (huart->Instance == USART1)
+		HAL_UARTEx_DisableStopMode(huart);
+
+	if (huart->Instance == USART2)
+		HAL_UARTEx_DisableStopMode(huart);
+
+	if (huart->Instance == USART3)
+		HAL_UARTEx_DisableStopMode(huart);
+
 }
 
 /*-----------------------------------------------------------*/
