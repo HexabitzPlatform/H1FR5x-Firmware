@@ -19,7 +19,7 @@ uint8_t* error_restart_message = "Restarting...\r\n";
 extern uint8_t UARTRxBuf[NumOfPorts][MSG_RX_BUF_SIZE];
 extern uint8_t UARTRxBufIndex[NumOfPorts];
 extern uint8_t WakeupFromStopFlag;
-
+extern DMA_HandleTypeDef hdma_usart5_rx;
 /* External function prototypes ----------------------------------------------*/
 
 extern TaskHandle_t xCommandConsoleTaskHandle; // CLI Task handler.
@@ -69,17 +69,32 @@ void SysTick_Handler(void){
        in index 0 of reception buffer by DMA).
      - Idle Event on Rx line : Triggered when RX line has been in idle state (normally high state)
        for 1 frame time, after last received byte. */
-
+//
+// void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size){
+// 	extern TaskHandle_t BackEndTaskHandle;
+//
+// 	PacketLength =Size;
+// 	count++;
+//
+// 	/* Notify backend task */
+// 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+// 	vTaskNotifyGiveFromISR(BackEndTaskHandle,&xHigherPriorityTaskWoken);
+// 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+//
+// }
  void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart,uint16_t Size){
  	extern TaskHandle_t BackEndTaskHandle;
 
  	PacketLength =Size;
  	count++;
+ 	if(portStatus[GetPort(huart)] == STREAM) {
 
- 	/* Notify backend task */
- 	BaseType_t xHigherPriorityTaskWoken = pdFALSE;
- 	vTaskNotifyGiveFromISR(BackEndTaskHandle,&xHigherPriorityTaskWoken);
- 	portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+ 	} else {
+ 	  /* Notify backend task */
+ 	  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+ 	  vTaskNotifyGiveFromISR(BackEndTaskHandle,&xHigherPriorityTaskWoken);
+ 	  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+ 	}
 
  }
 
@@ -209,72 +224,126 @@ void USART3_4_5_6_LPUART1_IRQHandler(void){
 }
 
 /*-----------------------------------------------------------*/
+//
+///**
+// * @brief This function handles DMA1 channel 1 interrupt (Uplink DMA 1).
+// */
+//void DMA1_Ch1_IRQHandler(void){
+//	/* Streaming or messaging DMA on P1 */
+//	DMA_IRQHandler(P1);
+//
+//}
+//
+///*-----------------------------------------------------------*/
+//
+///**
+// * @brief This function handles DMA1 channel 2 to 3 and DMA2 channel 1 to 2 interrupts.
+// */
+//void DMA1_Ch2_3_DMA2_Ch1_2_IRQHandler(void){
+//	/* Streaming or messaging DMA on P5 */
+//	if(HAL_DMA_GET_IT_SOURCE(DMA2,DMA_ISR_GIF2) == SET){
+//		DMA_IRQHandler(P5);
+//		/* Streaming or messaging DMA on P2 */
+//	}
+//	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF3) == SET){
+//		DMA_IRQHandler(P2);
+//		/* TX messaging DMA 0 */
+//	}
+//	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF2) == SET){
+//		HAL_DMA_IRQHandler(&msgTxDMA[0]);
+//	}
+//}
+//
+///*-----------------------------------------------------------*/
+//
+///**
+// * @brief This function handles DMA1 channel 4 to 7 and DMA2 channel 3 to 5 interrupts.
+// */
+//void DMA1_Ch4_7_DMA2_Ch3_5_IRQHandler(void){
+//	/* Streaming or messaging DMA on P3 */
+//	if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF5) == SET){
+//		DMA_IRQHandler(P3);
+//		/* Streaming or messaging DMA on P4 */
+//	}
+//	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF6) == SET){
+//		DMA_IRQHandler(P4);
+//		/* Streaming or messaging DMA on P6 */
+//	}
+//	else if(HAL_DMA_GET_IT_SOURCE(DMA2,DMA_ISR_GIF3) == SET){
+//		DMA_IRQHandler(P6);
+//		/* TX messaging DMA 1 */
+//	}
+////	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF4) == SET){
+////		HAL_DMA_IRQHandler(&msgTxDMA[1]);
+////		/* TX messaging DMA 2 */
+////	}
+////	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF7) == SET){
+////		HAL_DMA_IRQHandler(&msgTxDMA[2]);
+////	}
+//}
 
 /**
- * @brief This function handles DMA1 channel 1 interrupt (Uplink DMA 1).
- */
-void DMA1_Ch1_IRQHandler(void){
-	/* Streaming or messaging DMA on P1 */
-	DMA_IRQHandler(P1);
+  * @brief This function handles DMA1 channel 1 interrupt.
+  */
+void DMA1_Channel1_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel1_IRQn 0 */
+//  HAL_DMA_IRQHandler(&msgRxDMA[0]);
 	
-}
+	DMA_IRQHandler(GetPort(&huart1));
+  /* USER CODE BEGIN DMA1_Channel1_IRQn 1 */
 
-/*-----------------------------------------------------------*/
+  /* USER CODE END DMA1_Channel1_IRQn 1 */
+}
 
 /**
- * @brief This function handles DMA1 channel 2 to 3 and DMA2 channel 1 to 2 interrupts.
- */
-void DMA1_Ch2_3_DMA2_Ch1_2_IRQHandler(void){
-	/* Streaming or messaging DMA on P5 */
-	if(HAL_DMA_GET_IT_SOURCE(DMA2,DMA_ISR_GIF2) == SET){
-		DMA_IRQHandler(P5);
-		/* Streaming or messaging DMA on P2 */
-	}
-	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF3) == SET){
-		DMA_IRQHandler(P2);
-		/* TX messaging DMA 0 */
-	}
-	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF2) == SET){
-		HAL_DMA_IRQHandler(&msgTxDMA[0]);
-	}
-}
+  * @brief This function handles DMA1 channel 2 and channel 3 interrupts.
+  */
+void DMA1_Channel2_3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel2_3_IRQn 0 */
 
-/*-----------------------------------------------------------*/
+  /* USER CODE END DMA1_Channel2_3_IRQn 0 */
+	if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF2) == SET)
+		DMA_IRQHandler(GetPort(&huart2));
+	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF3) == SET)
+		DMA_IRQHandler(GetPort(&huart3));
+  /* USER CODE BEGIN DMA1_Channel2_3_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel2_3_IRQn 1 */
+}
 
 /**
- * @brief This function handles DMA1 channel 4 to 7 and DMA2 channel 3 to 5 interrupts.
- */
-void DMA1_Ch4_7_DMA2_Ch3_5_IRQHandler(void){
-	/* Streaming or messaging DMA on P3 */
-	if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF5) == SET){
-		DMA_IRQHandler(P3);
-		/* Streaming or messaging DMA on P4 */
-	}
-	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF6) == SET){
-		DMA_IRQHandler(P4);
-		/* Streaming or messaging DMA on P6 */
-	}
-	else if(HAL_DMA_GET_IT_SOURCE(DMA2,DMA_ISR_GIF3) == SET){
-		DMA_IRQHandler(P6);
-		/* TX messaging DMA 1 */
-	}
-	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF4) == SET){
-		HAL_DMA_IRQHandler(&msgTxDMA[1]);
-		/* TX messaging DMA 2 */
-	}
-	else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF7) == SET){
-		HAL_DMA_IRQHandler(&msgTxDMA[2]);
-	}
-}
+  * @brief This function handles DMA1 Ch4 to Ch7, DMA2 Ch1 to Ch5 and DMAMUX1 Overrun Interrupts.
+  */
+void DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 0 */
 
+  /* USER CODE END DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 0 */
+   if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF4) == SET)
+	   DMA_IRQHandler(GetPort(&huart4));
+   else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF5) == SET){
+	   __HAL_DMA_CLEAR_FLAG(&hdma_usart5_rx, DMA_FLAG_GI5);
+
+
+	   }
+   else if(HAL_DMA_GET_IT_SOURCE(DMA1,DMA_ISR_GIF6) == SET)
+	   DMA_IRQHandler(GetPort(&huart6));
+  /* USER CODE BEGIN DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 1 */
+
+  /* USER CODE END DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQn 1 */
+}
 /*-----------------------------------------------------------*/
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 	
 	/* TX DMAs are shared so unsetup them here to be reused */
-	if(huart->hdmatx != NULL)
-		DMA_MSG_TX_UnSetup(huart);
+//	if(huart->hdmatx != NULL)
+//		DMA_MSG_TX_UnSetup(huart);
 	
 	/* Give back the mutex. */
 	xSemaphoreGiveFromISR(PxTxSemaphoreHandle[GetPort(huart)],&(xHigherPriorityTaskWoken));
