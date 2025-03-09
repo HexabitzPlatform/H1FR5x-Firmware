@@ -165,7 +165,7 @@ void CheckAttachedButtons(void) {
 				// This is noise. Ignore it
 			} else {
 				if (pressCounter[i] == BOS.buttons.debounce) {
-					button[i].state = PRESSED;// Record a PRESSED event. This event is always reset on next tick.
+//					button[i].state = PRESSED;// Record a PRESSED event. This event is always reset on next tick.
 					++pressCounter[i];
 				}
 
@@ -188,7 +188,7 @@ void CheckAttachedButtons(void) {
 					if (clicked)
 						clicked = 0;						// Cannot be a click
 					// Process PRESSED_FOR_X_SEC events
-					CheckForTimedButtonPress(i);
+//					CheckForTimedButtonPress(i);
 				}
 			}
 
@@ -216,16 +216,16 @@ void CheckAttachedButtons(void) {
 				} else if (releaseCounter[i] >= 500
 						&& releaseCounter[i] < 0xFFFF) {
 					// Process RELEASED_FOR_Y_SEC events
-					CheckForTimedButtonRelease(i);
+//					CheckForTimedButtonRelease(i);
 				}
 			}
 
 			/* 6. Run button callbacks if needed */
 			switch (button[i].state) {
-			case PRESSED:
-				buttonPressedCallback(i);
-				button[i].state = NONE;
-				break;
+//			case PRESSED:
+//				buttonPressedCallback(i);
+//				button[i].state = NONE;
+//				break;
 
 			case RELEASED:
 				buttonReleasedCallback(i);
@@ -248,51 +248,51 @@ void CheckAttachedButtons(void) {
 				}
 				break;
 
-			case PRESSED_FOR_X1_SEC:
-				if (!delayButtonStateReset
-						&& (button[i].events & BUTTON_EVENT_PRESSED_FOR_X1_SEC)) {
-					delayButtonStateReset = true;
-					buttonPressedForXCallback(i, PRESSED_FOR_X1_SEC - 8);
-				}
-				break;
-			case PRESSED_FOR_X2_SEC:
-				if (!delayButtonStateReset
-						&& (button[i].events & BUTTON_EVENT_PRESSED_FOR_X2_SEC)) {
-					delayButtonStateReset = true;
-					buttonPressedForXCallback(i, PRESSED_FOR_X2_SEC - 8);
-				}
-				break;
-			case PRESSED_FOR_X3_SEC:
-				if (!delayButtonStateReset
-						&& (button[i].events & BUTTON_EVENT_PRESSED_FOR_X3_SEC)) {
-					delayButtonStateReset = true;
-					buttonPressedForXCallback(i, PRESSED_FOR_X3_SEC - 8);
-				}
-				break;
-
-			case RELEASED_FOR_Y1_SEC:
-				if (!delayButtonStateReset
-						&& (button[i].events & BUTTON_EVENT_RELEASED_FOR_Y1_SEC)) {
-					delayButtonStateReset = true;
-					buttonReleasedForYCallback(i, RELEASED_FOR_Y1_SEC - 11);
-				}
-				break;
-
-			case RELEASED_FOR_Y2_SEC:
-				if (!delayButtonStateReset
-						&& (button[i].events & BUTTON_EVENT_RELEASED_FOR_Y2_SEC)) {
-					delayButtonStateReset = true;
-					buttonReleasedForYCallback(i, RELEASED_FOR_Y2_SEC - 11);
-				}
-				break;
-
-			case RELEASED_FOR_Y3_SEC:
-				if (!delayButtonStateReset
-						&& (button[i].events & BUTTON_EVENT_RELEASED_FOR_Y3_SEC)) {
-					delayButtonStateReset = true;
-					buttonReleasedForYCallback(i, RELEASED_FOR_Y3_SEC - 11);
-				}
-				break;
+//			case PRESSED_FOR_X1_SEC:
+//				if (!delayButtonStateReset
+//						&& (button[i].events & BUTTON_EVENT_PRESSED_FOR_X1_SEC)) {
+//					delayButtonStateReset = true;
+//					buttonPressedForXCallback(i, PRESSED_FOR_X1_SEC - 8);
+//				}
+//				break;
+//			case PRESSED_FOR_X2_SEC:
+//				if (!delayButtonStateReset
+//						&& (button[i].events & BUTTON_EVENT_PRESSED_FOR_X2_SEC)) {
+//					delayButtonStateReset = true;
+//					buttonPressedForXCallback(i, PRESSED_FOR_X2_SEC - 8);
+//				}
+//				break;
+//			case PRESSED_FOR_X3_SEC:
+//				if (!delayButtonStateReset
+//						&& (button[i].events & BUTTON_EVENT_PRESSED_FOR_X3_SEC)) {
+//					delayButtonStateReset = true;
+//					buttonPressedForXCallback(i, PRESSED_FOR_X3_SEC - 8);
+//				}
+//				break;
+//
+//			case RELEASED_FOR_Y1_SEC:
+//				if (!delayButtonStateReset
+//						&& (button[i].events & BUTTON_EVENT_RELEASED_FOR_Y1_SEC)) {
+//					delayButtonStateReset = true;
+//					buttonReleasedForYCallback(i, RELEASED_FOR_Y1_SEC - 11);
+//				}
+//				break;
+//
+//			case RELEASED_FOR_Y2_SEC:
+//				if (!delayButtonStateReset
+//						&& (button[i].events & BUTTON_EVENT_RELEASED_FOR_Y2_SEC)) {
+//					delayButtonStateReset = true;
+//					buttonReleasedForYCallback(i, RELEASED_FOR_Y2_SEC - 11);
+//				}
+//				break;
+//
+//			case RELEASED_FOR_Y3_SEC:
+//				if (!delayButtonStateReset
+//						&& (button[i].events & BUTTON_EVENT_RELEASED_FOR_Y3_SEC)) {
+//					delayButtonStateReset = true;
+//					buttonReleasedForYCallback(i, RELEASED_FOR_Y3_SEC - 11);
+//				}
+//				break;
 
 			default:
 				break;
@@ -305,52 +305,52 @@ void CheckAttachedButtons(void) {
 /*-----------------------------------------------------------*/
 
 /* --- Check for timed press button events
- */
-BOS_Status CheckForTimedButtonPress(uint8_t port) {
-	BOS_Status result = BOS_OK;
-	uint32_t t1 = button[port].pressedX1Sec, t2 = button[port].pressedX2Sec,
-			t3 = button[port].pressedX3Sec;
-
-	/* Convert to ms */
-	t1 *= 1000;
-	t2 *= 1000;
-	t3 *= 1000;
-
-	if (pressCounter[port] == t1) {
-		button[port].state = PRESSED_FOR_X1_SEC;
-	} else if (pressCounter[port] == t2) {
-		button[port].state = PRESSED_FOR_X2_SEC;
-	} else if (pressCounter[port] == t3) {
-		button[port].state = PRESSED_FOR_X2_SEC;
-	}
-
-	return result;
-}
-
-/*-----------------------------------------------------------*/
-
-/* --- Check for timed release button events
- */
-BOS_Status CheckForTimedButtonRelease(uint8_t port) {
-	BOS_Status result = BOS_OK;
-	uint32_t t1 = button[port].releasedY1Sec, t2 = button[port].releasedY2Sec,
-			t3 = button[port].releasedY3Sec;
-
-	/* Convert to ms */
-	t1 *= 1000;
-	t2 *= 1000;
-	t3 *= 1000;
-
-	if (releaseCounter[port] == t1) {
-		button[port].state = RELEASED_FOR_Y1_SEC;
-	} else if (releaseCounter[port] == t2) {
-		button[port].state = RELEASED_FOR_Y2_SEC;
-	} else if (releaseCounter[port] == t3) {
-		button[port].state = RELEASED_FOR_Y2_SEC;
-	}
-
-	return result;
-}
+// */
+//BOS_Status CheckForTimedButtonPress(uint8_t port) {
+//	BOS_Status result = BOS_OK;
+//	uint32_t t1 = button[port].pressedX1Sec, t2 = button[port].pressedX2Sec,
+//			t3 = button[port].pressedX3Sec;
+//
+//	/* Convert to ms */
+//	t1 *= 1000;
+//	t2 *= 1000;
+//	t3 *= 1000;
+//
+//	if (pressCounter[port] == t1) {
+//		button[port].state = PRESSED_FOR_X1_SEC;
+//	} else if (pressCounter[port] == t2) {
+//		button[port].state = PRESSED_FOR_X2_SEC;
+//	} else if (pressCounter[port] == t3) {
+//		button[port].state = PRESSED_FOR_X2_SEC;
+//	}
+//
+//	return result;
+//}
+//
+///*-----------------------------------------------------------*/
+//
+///* --- Check for timed release button events
+// */
+//BOS_Status CheckForTimedButtonRelease(uint8_t port) {
+//	BOS_Status result = BOS_OK;
+//	uint32_t t1 = button[port].releasedY1Sec, t2 = button[port].releasedY2Sec,
+//			t3 = button[port].releasedY3Sec;
+//
+//	/* Convert to ms */
+//	t1 *= 1000;
+//	t2 *= 1000;
+//	t3 *= 1000;
+//
+//	if (releaseCounter[port] == t1) {
+//		button[port].state = RELEASED_FOR_Y1_SEC;
+//	} else if (releaseCounter[port] == t2) {
+//		button[port].state = RELEASED_FOR_Y2_SEC;
+//	} else if (releaseCounter[port] == t3) {
+//		button[port].state = RELEASED_FOR_Y2_SEC;
+//	}
+//
+//	return result;
+//}
 
 /*-----------------------------------------------------------*/
 
@@ -372,7 +372,7 @@ void ResetAttachedButtonStates(uint8_t *deferReset) {
  buttonType: MOMENTARY_NO, MOMENTARY_NC, ONOFF_NO, ONOFF_NC
  port: array port (P1 - Px)
  */
-BOS_Status AddPortButton(uint8_t buttonType, uint8_t port) {
+BOS_Status AddPortButton(ButtonType_e buttonType, uint8_t port)  {
 	BOS_Status result = BOS_OK;
 	GPIO_InitTypeDef GPIO_InitStruct;
 	uint32_t TX_Port, RX_Port;
@@ -517,6 +517,18 @@ BOS_Status RemovePortButton(uint8_t port) {
 
 /*-----------------------------------------------------------*/
 
+BOS_Status AddButton(uint8_t port, ButtonType_e buttonType, ButtonState_e buttonState)
+{
+	BOS_Status Status = BOS_OK;
+
+	AddPortButton(buttonType, port);
+	SetButtonEvents(port, buttonState, 0);
+
+	return BOS_OK;
+}
+
+/*-----------------------------------------------------------*/
+
 /* --- Setup button events and callbacks
  port: array port (P1 - Px) where the button is attached
  clicked: Single click event (1: Enable, 0: Disable)
@@ -525,10 +537,13 @@ BOS_Status RemovePortButton(uint8_t port) {
  released_x1sec, released_x1sec, released_x1sec: Release time for events Y1, Y2 and Y3 in seconds. Use 0 to disable the event.
  mode: BUTTON_EVENT_MODE_CLEAR to clear events marked with 0, BUTTON_EVENT_MODE_OR to OR events marked with 1 with existing events.
  */
-BOS_Status SetButtonEvents(uint8_t port, uint8_t clicked, uint8_t dbl_clicked,
-		uint8_t pressed_x1sec, uint8_t pressed_x2sec, uint8_t pressed_x3sec,
-		uint8_t released_y1sec, uint8_t released_y2sec, uint8_t released_y3sec,
-		uint8_t mode) {
+
+//BOS_Status SetButtonEvents(uint8_t port, uint8_t clicked, uint8_t dbl_clicked,
+//		uint8_t pressed_x1sec, uint8_t pressed_x2sec, uint8_t pressed_x3sec,
+//		uint8_t released_y1sec, uint8_t released_y2sec, uint8_t released_y3sec,
+//		uint8_t mode)
+BOS_Status SetButtonEvents(uint8_t port, ButtonState_e buttonState, uint8_t mode)
+{
 	BOS_Status result = BOS_OK;
 	uint16_t res, temp16;
 	uint8_t temp8;
@@ -536,61 +551,70 @@ BOS_Status SetButtonEvents(uint8_t port, uint8_t clicked, uint8_t dbl_clicked,
 	if (button[port].type == NONE)
 		return BOS_ERR_BUTTON_NOT_DEFINED;
 
-	button[port].pressedX1Sec = pressed_x1sec;
-	button[port].pressedX2Sec = pressed_x2sec;
-	button[port].pressedX3Sec = pressed_x3sec;
-	button[port].releasedY1Sec = released_y1sec;
-	button[port].releasedY2Sec = released_y2sec;
-	button[port].releasedY3Sec = released_y3sec;
+//	button[port].pressedX1Sec = pressed_x1sec;
+//	button[port].pressedX2Sec = pressed_x2sec;
+//	button[port].pressedX3Sec = pressed_x3sec;
+//	button[port].releasedY1Sec = released_y1sec;
+//	button[port].releasedY2Sec = released_y2sec;
+//	button[port].releasedY3Sec = released_y3sec;
 
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && clicked)) {
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && clicked)) {
+		if (mode == BUTTON_EVENT_MODE_OR
+				|| (mode == BUTTON_EVENT_MODE_CLEAR && buttonState == CLICKED)) {
 		button[port].events |= BUTTON_EVENT_CLICKED;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !clicked) {
-		button[port].events &= ~BUTTON_EVENT_CLICKED;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !clicked) {
+//		button[port].events &= ~BUTTON_EVENT_CLICKED;
+		} else if (mode == BUTTON_EVENT_MODE_CLEAR && !buttonState == CLICKED) {
+			button[port].events &= ~BUTTON_EVENT_CLICKED;
 	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && dbl_clicked)) {
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && dbl_clicked)) {
+		if (mode == BUTTON_EVENT_MODE_OR
+				|| (mode == BUTTON_EVENT_MODE_CLEAR && buttonState == DBL_CLICKED)) {
 		button[port].events |= BUTTON_EVENT_DBL_CLICKED;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !dbl_clicked) {
-		button[port].events &= ~BUTTON_EVENT_DBL_CLICKED;
-	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && pressed_x1sec)) {
-		button[port].events |= BUTTON_EVENT_PRESSED_FOR_X1_SEC;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !pressed_x1sec) {
-		button[port].events &= ~BUTTON_EVENT_PRESSED_FOR_X1_SEC;
-	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && pressed_x2sec)) {
-		button[port].events |= BUTTON_EVENT_PRESSED_FOR_X2_SEC;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !pressed_x2sec) {
-		button[port].events &= ~BUTTON_EVENT_PRESSED_FOR_X2_SEC;
-	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && pressed_x3sec)) {
-		button[port].events |= BUTTON_EVENT_PRESSED_FOR_X3_SEC;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !pressed_x3sec) {
-		button[port].events &= ~BUTTON_EVENT_PRESSED_FOR_X3_SEC;
-	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && released_y1sec)) {
-		button[port].events |= BUTTON_EVENT_RELEASED_FOR_Y1_SEC;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !released_y1sec) {
-		button[port].events &= ~BUTTON_EVENT_RELEASED_FOR_Y1_SEC;
-	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && released_y2sec)) {
-		button[port].events |= BUTTON_EVENT_RELEASED_FOR_Y2_SEC;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !released_y2sec) {
-		button[port].events &= ~BUTTON_EVENT_RELEASED_FOR_Y2_SEC;
-	}
-	if (mode == BUTTON_EVENT_MODE_OR
-			|| (mode == BUTTON_EVENT_MODE_CLEAR && released_y3sec)) {
-		button[port].events |= BUTTON_EVENT_RELEASED_FOR_Y3_SEC;
-	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !released_y3sec) {
-		button[port].events &= ~BUTTON_EVENT_RELEASED_FOR_Y3_SEC;
-	}
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !dbl_clicked) {
+//		button[port].events &= ~BUTTON_EVENT_DBL_CLICKED;
+//	}
+} else if (mode == BUTTON_EVENT_MODE_CLEAR && !buttonState == DBL_CLICKED) {
+	button[port].events &= ~BUTTON_EVENT_DBL_CLICKED;
+}
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && pressed_x1sec)) {
+//		button[port].events |= BUTTON_EVENT_PRESSED_FOR_X1_SEC;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !pressed_x1sec) {
+//		button[port].events &= ~BUTTON_EVENT_PRESSED_FOR_X1_SEC;
+//	}
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && pressed_x2sec)) {
+//		button[port].events |= BUTTON_EVENT_PRESSED_FOR_X2_SEC;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !pressed_x2sec) {
+//		button[port].events &= ~BUTTON_EVENT_PRESSED_FOR_X2_SEC;
+//	}
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && pressed_x3sec)) {
+//		button[port].events |= BUTTON_EVENT_PRESSED_FOR_X3_SEC;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !pressed_x3sec) {
+//		button[port].events &= ~BUTTON_EVENT_PRESSED_FOR_X3_SEC;
+//	}
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && released_y1sec)) {
+//		button[port].events |= BUTTON_EVENT_RELEASED_FOR_Y1_SEC;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !released_y1sec) {
+//		button[port].events &= ~BUTTON_EVENT_RELEASED_FOR_Y1_SEC;
+//	}
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && released_y2sec)) {
+//		button[port].events |= BUTTON_EVENT_RELEASED_FOR_Y2_SEC;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !released_y2sec) {
+//		button[port].events &= ~BUTTON_EVENT_RELEASED_FOR_Y2_SEC;
+//	}
+//	if (mode == BUTTON_EVENT_MODE_OR
+//			|| (mode == BUTTON_EVENT_MODE_CLEAR && released_y3sec)) {
+//		button[port].events |= BUTTON_EVENT_RELEASED_FOR_Y3_SEC;
+//	} else if (mode == BUTTON_EVENT_MODE_CLEAR && !released_y3sec) {
+//		button[port].events &= ~BUTTON_EVENT_RELEASED_FOR_Y3_SEC;
+//	}
 
 	/* Add to EEPROM */
 	res = EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1), &temp16);
@@ -603,27 +627,27 @@ BOS_Status SetButtonEvents(uint8_t port, uint8_t clicked, uint8_t dbl_clicked,
 			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1), temp16);
 		}
 
-		/* Store times - only if different */
-		EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 1, &temp16);
-		if (temp16
-				!= (((uint16_t) pressed_x1sec << 8) | (uint16_t) released_y1sec))
-			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 1,
-					((uint16_t) pressed_x1sec << 8)
-							| (uint16_t) released_y1sec);
-
-		EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 2, &temp16);
-		if (temp16
-				!= (((uint16_t) pressed_x2sec << 8) | (uint16_t) released_y2sec))
-			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 2,
-					((uint16_t) pressed_x2sec << 8)
-							| (uint16_t) released_y2sec);
-
-		EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 3, &temp16);
-		if (temp16
-				!= (((uint16_t) pressed_x3sec << 8) | (uint16_t) released_y3sec))
-			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 3,
-					((uint16_t) pressed_x3sec << 8)
-							| (uint16_t) released_y3sec);
+//		/* Store times - only if different */
+//		EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 1, &temp16);
+//		if (temp16
+//				!= (((uint16_t) pressed_x1sec << 8) | (uint16_t) released_y1sec))
+//			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 1,
+//					((uint16_t) pressed_x1sec << 8)
+//							| (uint16_t) released_y1sec);
+//
+//		EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 2, &temp16);
+//		if (temp16
+//				!= (((uint16_t) pressed_x2sec << 8) | (uint16_t) released_y2sec))
+//			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 2,
+//					((uint16_t) pressed_x2sec << 8)
+//							| (uint16_t) released_y2sec);
+//
+//		EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 3, &temp16);
+//		if (temp16
+//				!= (((uint16_t) pressed_x3sec << 8) | (uint16_t) released_y3sec))
+//			EE_WriteVariable(_EE_BUTTON_BASE + 4 * (port - 1) + 3,
+//					((uint16_t) pressed_x3sec << 8)
+//							| (uint16_t) released_y3sec);
 	}	// TODO - var does not exist after adding button!
 	else
 		// Variable does not exist. Return error
