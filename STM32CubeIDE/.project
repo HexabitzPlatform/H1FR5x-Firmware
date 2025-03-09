@@ -221,7 +221,7 @@
 		<link>
 			<name>Thirdparty/EEPROM_Emul</name>
 			<type>2</type>
-			<locationURI>PARENT-2-PROJECT_LOC/H01R0x-Firmware/Thirdparty/EEPROM_Emul</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/H08R7x-Firmware/Thirdparty/EEPROM_Emul</locationURI>
 		</link>
 		<link>
 			<name>Thirdparty/Middleware</name>
