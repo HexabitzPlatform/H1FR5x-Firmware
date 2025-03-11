@@ -495,22 +495,13 @@ BOS_Status RemovePortButton(uint8_t port) {
 #ifdef _Usart6	
 		MX_USART6_UART_Init();
 #endif
-	/*} else if (huart->Instance == USART7) {
-#ifdef _Usart7	
-		MX_USART7_UART_Init();
-#endif
-	} else if (huart->Instance == USART8) {
-#ifdef _Usart8	
-		MX_USART8_UART_Init();
-#endif*/
-		//TOBECHECKED
 	} else
 		result = BOS_ERROR;
 
-	/* 4. Start scanning this port */
+	/* 4. free port */
 	portStatus[port] = FREE;
-	/* Read this port again */
-	HAL_UART_Receive_IT(huart, (uint8_t*) &cRxedChar, 1);
+	/* Setup UART DMA */
+	DMA_MSG_RX_Setup(huart,UARTDMAHandler[port - 1]);
 
 	return result;
 }
