@@ -39,7 +39,6 @@ uint8_t flag ;
 uint8_t cont ;
 uint8_t tofMode ;
 /* Module exported parameters ------------------------------------------------*/
-module_param_t modParam[NUM_MODULE_PARAMS] ={{.paramPtr = NULL, .paramFormat =FMT_FLOAT, .paramName =""}};
 #define MIN_MEMS_PERIOD_MS				100
 #define MAX_MEMS_TIMEOUT_MS				0xFFFFFFFF
 /* Private variables ---------------------------------------------------------*/
@@ -48,6 +47,33 @@ typedef void (*SampleMemsToString)(char *, size_t);
 static bool stopStream = false;
 TaskHandle_t GPSTaskHandle = NULL;
 uint8_t tofMode ;
+
+float H1FR5_longitude = 0.0f;
+float H1FR5_latitude = 0.0f;
+char H1FR5_longIndicator = 'E';  // Default: East
+char H1FR5_latIndicator = 'N';   // Default: North
+uint8_t H1FR5_hours = 0;
+uint8_t H1FR5_minutes = 0;
+uint8_t H1FR5_seconds = 0;
+float H1FR5_speedInch = 0.0f;
+float H1FR5_speedKm = 0.0f;
+float H1FR5_height = 0.0f;
+
+/* Exported Typedef */
+module_param_t modParam[NUM_MODULE_PARAMS] = {
+    {.paramPtr = &H1FR5_longitude, .paramFormat = FMT_FLOAT, .paramName = "longitude"},
+    {.paramPtr = &H1FR5_latitude, .paramFormat = FMT_FLOAT, .paramName = "latitude"},
+    {.paramPtr = &H1FR5_longIndicator, .paramFormat = FMT_INT8, .paramName = "longindicator"},
+    {.paramPtr = &H1FR5_latIndicator, .paramFormat = FMT_INT8, .paramName = "latindicator"},
+    {.paramPtr = &H1FR5_hours, .paramFormat = FMT_UINT8, .paramName = "utc_hours"},
+    {.paramPtr = &H1FR5_minutes, .paramFormat = FMT_UINT8, .paramName = "utc_minutes"},
+    {.paramPtr = &H1FR5_seconds, .paramFormat = FMT_UINT8, .paramName = "utc_seconds"},
+    {.paramPtr = &H1FR5_speedInch, .paramFormat = FMT_FLOAT, .paramName = "speedinch"},
+    {.paramPtr = &H1FR5_speedKm, .paramFormat = FMT_FLOAT, .paramName = "speedkm"},
+    {.paramPtr = &H1FR5_height, .paramFormat = FMT_FLOAT, .paramName = "height"}
+};
+
+
 /* Private function prototypes -----------------------------------------------*/
 static Module_Status StreamMemsToTerminal(uint32_t Numofsamples, uint32_t timeout,uint8_t Port, SampleMemsToString function);
 static Module_Status StreamToBuf( float *buffer, uint32_t Numofsamples, uint32_t timeout,buffer_Data function);
@@ -432,6 +458,96 @@ uint8_t GetPort(UART_HandleTypeDef *huart){
 	
 	return 0;
 }
+/***************************************************************************/
+/* This function is useful only for input (sensor) modules.
+ * @brief: Samples a module parameter value based on parameter index.
+ * @param paramIndex: Index of the parameter (1-based index).
+ * @param value: Pointer to store the sampled float value.
+ * @retval: Module_Status indicating success or failure.
+ */
+Module_Status GetModuleParameter(uint8_t paramIndex, float *value) {
+    Module_Status status = BOS_OK;
+
+    switch (paramIndex) {
+        /* Sample Longitude */
+        case 1:
+            status = GetPosition(value, NULL, NULL, NULL);
+            break;
+
+        /* Sample Latitude */
+        case 2:
+            status = GetPosition(NULL, value, NULL, NULL);
+            break;
+
+        /* Sample Longitude Indicator */
+        case 3: {
+            char temp;
+            status = GetPosition(NULL, NULL, &temp, NULL);
+            if (status == BOS_OK)
+                *value = (float)temp;
+            break;
+        }
+
+        /* Sample Latitude Indicator */
+        case 4: {
+            char temp;
+            status = GetPosition(NULL, NULL, NULL, &temp);
+            if (status == BOS_OK)
+                *value = (float)temp;
+            break;
+        }
+
+        /* Sample UTC Hours */
+        case 5: {
+            uint8_t temp;
+            status = GetUTC(&temp, NULL, NULL);
+            if (status == BOS_OK)
+                *value = (float)temp;
+            break;
+        }
+
+        /* Sample UTC Minutes */
+        case 6: {
+            uint8_t temp;
+            status = GetUTC(NULL, &temp, NULL);
+            if (status == BOS_OK)
+                *value = (float)temp;
+            break;
+        }
+
+        /* Sample UTC Seconds */
+        case 7: {
+            uint8_t temp;
+            status = GetUTC(NULL, NULL, &temp);
+            if (status == BOS_OK)
+                *value = (float)temp;
+            break;
+        }
+
+        /* Sample Speed in Inches */
+        case 8:
+            status = GetSpeed(value, NULL);
+            break;
+
+        /* Sample Speed in Km */
+        case 9:
+            status = GetSpeed(NULL, value);
+            break;
+
+        /* Sample Height */
+        case 10:
+            status = GetHeight(value);
+            break;
+
+        /* Invalid parameter index */
+        default:
+            status = BOS_ERR_WrongParam;
+            break;
+    }
+
+    return status;
+}
+
 
 /*-----------------------------------------------------------*/
 

@@ -105,7 +105,7 @@
 
 /* Module-specific Definitions */
 
-#define NUM_MODULE_PARAMS						1
+#define NUM_MODULE_PARAMS						10
 
 #define SAMPLE_TEM              0
 #define SAMPLE_TO_PORT          1
