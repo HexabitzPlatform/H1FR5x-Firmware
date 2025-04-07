@@ -392,15 +392,15 @@ void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outpo
  - Set datasize to 9 bits
  */
 void SetupPortForRemoteBootloaderUpdate(uint8_t port){
-	UART_HandleTypeDef *huart =GetUart(port);
 
-	huart->Init.BaudRate =57600;
+	UART_HandleTypeDef *huart =GetUart(port);
+	HAL_UART_DeInit(huart);
 	huart->Init.Parity = UART_PARITY_EVEN;
 	huart->Init.WordLength = UART_WORDLENGTH_9B;
 	HAL_UART_Init(huart);
-
 	/* The CLI port RXNE interrupt might be disabled so enable here again to be sure */
 	__HAL_UART_ENABLE_IT(huart,UART_IT_RXNE);
+
 }
 
 /*-----------------------------------------------------------*/
