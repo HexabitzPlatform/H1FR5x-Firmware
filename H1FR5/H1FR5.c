@@ -59,18 +59,18 @@ float H1FR5_speedInch = 0.0f;
 float H1FR5_speedKm = 0.0f;
 float H1FR5_height = 0.0f;
 
-/* Exported Typedef */
-module_param_t modParam[NUM_MODULE_PARAMS] = {
-    {.paramPtr = &H1FR5_longitude, .paramFormat = FMT_FLOAT, .paramName = "longitude"},
-    {.paramPtr = &H1FR5_latitude, .paramFormat = FMT_FLOAT, .paramName = "latitude"},
-    {.paramPtr = &H1FR5_longIndicator, .paramFormat = FMT_INT8, .paramName = "longindicator"},
-    {.paramPtr = &H1FR5_latIndicator, .paramFormat = FMT_INT8, .paramName = "latindicator"},
-    {.paramPtr = &H1FR5_hours, .paramFormat = FMT_UINT8, .paramName = "utc_hours"},
-    {.paramPtr = &H1FR5_minutes, .paramFormat = FMT_UINT8, .paramName = "utc_minutes"},
-    {.paramPtr = &H1FR5_seconds, .paramFormat = FMT_UINT8, .paramName = "utc_seconds"},
-    {.paramPtr = &H1FR5_speedInch, .paramFormat = FMT_FLOAT, .paramName = "speedinch"},
-    {.paramPtr = &H1FR5_speedKm, .paramFormat = FMT_FLOAT, .paramName = "speedkm"},
-    {.paramPtr = &H1FR5_height, .paramFormat = FMT_FLOAT, .paramName = "height"}
+/* Module Parameters */
+ModuleParam_t ModuleParam[NUM_MODULE_PARAMS] = {
+    {.ParamPtr = &H1FR5_longitude, .ParamFormat = FMT_FLOAT, .ParamName = "longitude"},
+    {.ParamPtr = &H1FR5_latitude, .ParamFormat = FMT_FLOAT, .ParamName = "latitude"},
+    {.ParamPtr = &H1FR5_longIndicator, .ParamFormat = FMT_INT8, .ParamName = "longindicator"},
+    {.ParamPtr = &H1FR5_latIndicator, .ParamFormat = FMT_INT8, .ParamName = "latindicator"},
+    {.ParamPtr = &H1FR5_hours, .ParamFormat = FMT_UINT8, .ParamName = "utc_hours"},
+    {.ParamPtr = &H1FR5_minutes, .ParamFormat = FMT_UINT8, .ParamName = "utc_minutes"},
+    {.ParamPtr = &H1FR5_seconds, .ParamFormat = FMT_UINT8, .ParamName = "utc_seconds"},
+    {.ParamPtr = &H1FR5_speedInch, .ParamFormat = FMT_FLOAT, .ParamName = "speedinch"},
+    {.ParamPtr = &H1FR5_speedKm, .ParamFormat = FMT_FLOAT, .ParamName = "speedkm"},
+    {.ParamPtr = &H1FR5_height, .ParamFormat = FMT_FLOAT, .ParamName = "height"}
 };
 
 
@@ -121,74 +121,200 @@ const CLI_Command_Definition_t StopCommandDefinition = {
 	StopStreamCommand,
 	0
 };
-/* ---------------------------------------------------------------------
- |								 Private Functions	                	|
- ----------------------------------------------------------------------- 
+
+
+/***************************************************************************/
+/************************ Private function Definitions *********************/
+/***************************************************************************/
+/* @brief  System Clock Configuration
+ *         This function configures the system clock as follows:
+ *            - System Clock source            = PLL (HSE)
+ *            - SYSCLK(Hz)                     = 64000000
+ *            - HCLK(Hz)                       = 64000000
+ *            - AHB Prescaler                  = 1
+ *            - APB1 Prescaler                 = 1
+ *            - HSE Frequency(Hz)              = 8000000
+ *            - PLLM                           = 1
+ *            - PLLN                           = 16
+ *            - PLLP                           = 2
+ *            - Flash Latency(WS)              = 2
+ *            - Clock Source for UART1,UART2,UART3 = 16MHz (HSI)
  */
-
-/**
-* @brief  System Clock Configuration
-*         This function configures the system clock as follows:
-*            - System Clock source            = PLL (HSE)
-*            - SYSCLK(Hz)                     = 64000000
-*            - HCLK(Hz)                       = 64000000
-*            - AHB Prescaler                  = 1
-*            - APB1 Prescaler                 = 1
-*            - HSE Frequency(Hz)              = 8000000
-*            - PLLM                           = 1
-*            - PLLN                           = 16
-*            - PLLP                           = 2
-*            - Flash Latency(WS)              = 2
-*            - Clock Source for UART1,UART2,UART3 = 16MHz (HSI)
-* @param  None
-* @retval None
-*/
 void SystemClock_Config(void){
-   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+	RCC_OscInitTypeDef RCC_OscInitStruct ={0};
+	RCC_ClkInitTypeDef RCC_ClkInitStruct ={0};
 
-   /** Configure the main internal regulator output voltage */
-   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+	/** Configure the main internal regulator output voltage */
+	HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-   /** Initializes the RCC Oscillators according to the specified parameters
-    * in the RCC_OscInitTypeDef structure.
-    */
-   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSE; // Enable both HSI and HSE oscillators
-   RCC_OscInitStruct.HSEState = RCC_HSE_ON; // Enable HSE (External High-Speed Oscillator)
-   RCC_OscInitStruct.HSIState = RCC_HSI_ON; // Enable HSI (Internal High-Speed Oscillator)
-   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1; // No division on HSI
-   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT; // Default calibration value for HSI
-   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON; // Enable PLL
-   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE; // Set PLL source to HSE
-   RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1; // Prescaler for PLL input
-   RCC_OscInitStruct.PLL.PLLN = 16; // Multiplication factor for PLL
-   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2; // PLLP division factor
-   RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2; // PLLQ division factor
-   RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2; // PLLR division factor
-   HAL_RCC_OscConfig(&RCC_OscInitStruct);
+	/* Initializes the RCC Oscillators according to the specified parameters
+	 * in the RCC_OscInitTypeDef structure.
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI | RCC_OSCILLATORTYPE_HSE; // Enable both HSI and HSE oscillators
+	RCC_OscInitStruct.HSEState = RCC_HSE_ON; // Enable HSE (External High-Speed Oscillator)
+	RCC_OscInitStruct.HSIState = RCC_HSI_ON; // Enable HSI (Internal High-Speed Oscillator)
+	RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1; // No division on HSI
+	RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT; // Default calibration value for HSI
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON; // Enable PLL
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE; // Set PLL source to HSE
+	RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1; // Prescaler for PLL input
+	RCC_OscInitStruct.PLL.PLLN =16; // Multiplication factor for PLL
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2; // PLLP division factor
+	RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2; // PLLQ division factor
+	RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2; // PLLR division factor
+	HAL_RCC_OscConfig(&RCC_OscInitStruct);
 
-   /** Initializes the CPU, AHB and APB buses clocks */
-   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
-   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK; // Select PLL as the system clock source
-   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1; // AHB Prescaler set to 1
-   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1; // APB1 Prescaler set to 1
+	/** Initializes the CPU, AHB and APB buses clocks */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK; // Select PLL as the system clock source
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1; // AHB Prescaler set to 1
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1; // APB1 Prescaler set to 1
 
-   HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2); // Configure system clocks with flash latency of 2 WS
+	HAL_RCC_ClockConfig(&RCC_ClkInitStruct,FLASH_LATENCY_2); // Configure system clocks with flash latency of 2 WS
 }
 
-/*-----------------------------------------------------------*/
+/***************************************************************************/
+/* enable stop mode regarding only UART1 , UART2 , and UART3 */
+BOS_Status EnableStopModebyUARTx(uint8_t port){
 
-/* --- Save Command Topology in Flash RO --- */
+	UART_WakeUpTypeDef WakeUpSelection;
+	UART_HandleTypeDef *huart =GetUart(port);
 
-uint8_t SaveTopologyToRO(void)
-{
+	if((huart->Instance == USART1) || (huart->Instance == USART2) || (huart->Instance == USART3)){
+
+		/* make sure that no UART transfer is on-going */
+		while(__HAL_UART_GET_FLAG(huart, USART_ISR_BUSY) == SET);
+
+		/* make sure that UART is ready to receive */
+		while(__HAL_UART_GET_FLAG(huart, USART_ISR_REACK) == RESET);
+
+		/* set the wake-up event:
+		 * specify wake-up on start-bit detection */
+		WakeUpSelection.WakeUpEvent = UART_WAKEUP_ON_STARTBIT;
+		HAL_UARTEx_StopModeWakeUpSourceConfig(huart,WakeUpSelection);
+
+		/* Enable the UART Wake UP from stop mode Interrupt */
+		__HAL_UART_ENABLE_IT(huart,UART_IT_WUF);
+
+		/* enable MCU wake-up by LPUART */
+		HAL_UARTEx_EnableStopMode(huart);
+
+		/* enter STOP mode */
+		HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON,PWR_STOPENTRY_WFI);
+	}
+	else
+		return BOS_ERROR;
+
+}
+
+/***************************************************************************/
+/* Enable standby mode regarding wake-up pins:
+ * WKUP1: PA0  pin
+ * WKUP4: PA2  pin
+ * WKUP6: PB5  pin
+ * WKUP2: PC13 pin
+ * NRST pin
+ *  */
+BOS_Status EnableStandbyModebyWakeupPinx(WakeupPins_t wakeupPins){
+
+	/* Clear the WUF FLAG */
+	__HAL_PWR_CLEAR_FLAG(PWR_FLAG_WUF);
+
+	/* Enable the WAKEUP PIN */
+	switch(wakeupPins){
+
+		case PA0_PIN:
+			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN1); /* PA0 */
+			break;
+
+		case PA2_PIN:
+			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN4); /* PA2 */
+			break;
+
+		case PB5_PIN:
+			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN6); /* PB5 */
+			break;
+
+		case PC13_PIN:
+			HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN2); /* PC13 */
+			break;
+
+		case NRST_PIN:
+			/* do no thing*/
+			break;
+	}
+
+	/* Enable SRAM content retention in Standby mode */
+	HAL_PWREx_EnableSRAMRetention();
+
+	/* Finally enter the standby mode */
+	HAL_PWR_EnterSTANDBYMode();
+
+	return BOS_OK;
+}
+
+/***************************************************************************/
+/* Disable standby mode regarding wake-up pins:
+ * WKUP1: PA0  pin
+ * WKUP4: PA2  pin
+ * WKUP6: PB5  pin
+ * WKUP2: PC13 pin
+ * NRST pin
+ *  */
+BOS_Status DisableStandbyModeWakeupPinx(WakeupPins_t wakeupPins){
+
+	/* The standby wake-up is same as a system RESET:
+	 * The entire code runs from the beginning just as if it was a RESET.
+	 * The only difference between a reset and a STANDBY wake-up is that, when the MCU wakes-up,
+	 * The SBF status flag in the PWR power control/status register (PWR_CSR) is set */
+	if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET){
+		/* clear the flag */
+		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+
+		/* Disable  Wake-up Pinx */
+		switch(wakeupPins){
+
+			case PA0_PIN:
+				HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN1); /* PA0 */
+				break;
+
+			case PA2_PIN:
+				HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN4); /* PA2 */
+				break;
+
+			case PB5_PIN:
+				HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN6); /* PB5 */
+				break;
+
+			case PC13_PIN:
+				HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2); /* PC13 */
+				break;
+
+			case NRST_PIN:
+				/* do no thing*/
+				break;
+		}
+
+		IND_blink(1000);
+
+	}
+	else
+		return BOS_OK;
+
+}
+
+/***************************************************************************/
+/* Save Command Topology in Flash RO */
+uint8_t SaveTopologyToRO(void){
+
 	HAL_StatusTypeDef flashStatus =HAL_OK;
+
 	/* flashAdd is initialized with 8 because the first memory room in topology page
 	 * is reserved for module's ID */
-	uint16_t flashAdd = 8;
-    uint16_t temp =0;
+	uint16_t flashAdd =8;
+	uint16_t temp =0;
 
-    /* Unlock the FLASH control register access */
+	/* Unlock the FLASH control register access */
 	HAL_FLASH_Unlock();
 
 	/* Erase Topology page */
@@ -231,13 +357,13 @@ uint8_t SaveTopologyToRO(void)
 
 		/* Save topology */
 		for(uint8_t row =1; row <= N; row++){
-			for(uint8_t column =0; column <= MaxNumOfPorts; column++){
+			for(uint8_t column =0; column <= MAX_NUM_OF_PORTS; column++){
 				/* Check the module serial number
 				 * Note: there isn't a module has serial number 0
 				 */
-				if(array[row - 1][0]){
-					/* Save each element in topology array in Flash memory */
-					HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,TOPOLOGY_START_ADDRESS + flashAdd,array[row - 1][column]);
+				if(Array[row - 1][0]){
+					/* Save each element in topology Array in Flash memory */
+					HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,TOPOLOGY_START_ADDRESS + flashAdd,Array[row - 1][column]);
 					/* Wait for a Write operation to complete */
 					flashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
 					if(flashStatus != HAL_OK){
@@ -248,7 +374,7 @@ uint8_t SaveTopologyToRO(void)
 						/* If the program operation is completed, disable the PG Bit */
 						CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
 						/* update new flash memory address */
-						flashAdd += 8;
+						flashAdd +=8;
 					}
 				}
 			}
@@ -258,18 +384,15 @@ uint8_t SaveTopologyToRO(void)
 	HAL_FLASH_Lock();
 }
 
-/*-----------------------------------------------------------*/
-
-/* --- Save Command Snippets in Flash RO --- */
-
-uint8_t SaveSnippetsToRO(void)
-{
+/***************************************************************************/
+/* Save Command Snippets in Flash RO */
+uint8_t SaveSnippetsToRO(void){
 	HAL_StatusTypeDef FlashStatus =HAL_OK;
-    uint8_t snipBuffer[sizeof(snippet_t) + 1] ={0};
+	uint8_t snipBuffer[sizeof(Snippet_t) + 1] ={0};
 
-    /* Unlock the FLASH control register access */
+	/* Unlock the FLASH control register access */
 	HAL_FLASH_Unlock();
-    /* Erase Snippets page */
+	/* Erase Snippets page */
 	FLASH_PageErase(FLASH_BANK_2,SNIPPETS_PAGE_NUM);
 	/* Wait for an Erase operation to complete */
 	FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
@@ -285,15 +408,15 @@ uint8_t SaveSnippetsToRO(void)
 
 	/* Save Command Snippets */
 	int currentAdd = SNIPPETS_START_ADDRESS;
-	for(uint8_t index = 0; index < numOfRecordedSnippets; index++){
+	for(uint8_t index =0; index < NumOfRecordedSnippets; index++){
 		/* Check if Snippet condition is true or false */
-		if(snippets[index].cond.conditionType){
+		if(Snippets[index].Condition.ConditionType){
 			/* A marker to separate Snippets */
 			snipBuffer[0] =0xFE;
-			memcpy((uint32_t* )&snipBuffer[1],(uint8_t* )&snippets[index],sizeof(snippet_t));
-			/* Copy the snippet struct buffer (20 x numOfRecordedSnippets). Note this is assuming sizeof(snippet_t) is even */
-			for(uint8_t j =0; j < (sizeof(snippet_t)/4); j++){
-				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )&snipBuffer[j*8]);
+			memcpy((uint32_t* )&snipBuffer[1],(uint8_t* )&Snippets[index],sizeof(Snippet_t));
+			/* Copy the snippet struct buffer (20 x NumOfRecordedSnippets). Note this is assuming sizeof(Snippet_t) is even */
+			for(uint8_t j =0; j < (sizeof(Snippet_t) / 4); j++){
+				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )&snipBuffer[j * 8]);
 				FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
 				if(FlashStatus != HAL_OK){
 					return pFlash.ErrorCode;
@@ -305,8 +428,8 @@ uint8_t SaveSnippetsToRO(void)
 				}
 			}
 			/* Copy the snippet commands buffer. Always an even number. Note the string termination char might be skipped */
-			for(uint8_t j = 0; j < ((strlen(snippets[index].cmd) + 1)/4); j++){
-				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )(snippets[index].cmd + j*4 ));
+			for(uint8_t j =0; j < ((strlen(Snippets[index].CMD) + 1) / 4); j++){
+				HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD,currentAdd,*(uint64_t* )(Snippets[index].CMD + j * 4));
 				FlashStatus =FLASH_WaitForLastOperation((uint32_t ) HAL_FLASH_TIMEOUT_VALUE);
 				if(FlashStatus != HAL_OK){
 					return pFlash.ErrorCode;
@@ -314,7 +437,7 @@ uint8_t SaveSnippetsToRO(void)
 				else{
 					/* If the program operation is completed, disable the PG Bit */
 					CLEAR_BIT(FLASH->CR,FLASH_CR_PG);
-					currentAdd += 8;
+					currentAdd +=8;
 				}
 			}
 		}
@@ -323,28 +446,25 @@ uint8_t SaveSnippetsToRO(void)
 	HAL_FLASH_Lock();
 }
 
-/*-----------------------------------------------------------*/
-
-/* --- Clear array topology in SRAM and Flash RO --- */
-
+/***************************************************************************/
+/* Clear Array topology in SRAM and Flash RO */
 uint8_t ClearROtopology(void){
-	// Clear the array 
-	memset(array,0,sizeof(array));
+	/* Clear the Array */
+	memset(Array,0,sizeof(Array));
 	N =1;
 	myID =0;
 	
 	return SaveTopologyToRO();
 }
-/*-----------------------------------------------------------*/
 
-/* --- Trigger ST factory bootloader update for a remote module.
- */
-void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport){
+/***************************************************************************/
+/* Trigger ST factory bootloader update for a remote module */
+void RemoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outport){
 
 	uint8_t myOutport =0, lastModule =0;
 	int8_t *pcOutputString;
 
-	/* 1. Get route to destination module */
+	/* 1. Get Route to destination module */
 	myOutport =FindRoute(myID,dst);
 	if(outport && dst == myID){ /* This is a 'via port' update and I'm the last module */
 		myOutport =outport;
@@ -354,14 +474,14 @@ void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outpo
 		if(NumberOfHops(dst)== 1)
 		lastModule = myID;
 		else
-		lastModule = route[NumberOfHops(dst)-1]; /* previous module = route[Number of hops - 1] */
+		lastModule = Route[NumberOfHops(dst)-1]; /* previous module = Route[Number of hops - 1] */
 	}
 
 	/* 2. If this is the source of the message, show status on the CLI */
 	if(src == myID){
 		/* Obtain the address of the output buffer.  Note there is no mutual
-		 exclusion on this buffer as it is assumed only one command console
-		 interface will be used at any one time. */
+		 * exclusion on this buffer as it is assumed only one command console
+		 * interface will be used at any one time. */
 		pcOutputString =FreeRTOS_CLIGetOutputBuffer();
 
 		if(outport == 0)		// This is a remote module update
@@ -379,17 +499,15 @@ void remoteBootloaderUpdate(uint8_t src,uint8_t dst,uint8_t inport,uint8_t outpo
 	SetupPortForRemoteBootloaderUpdate(inport);
 	SetupPortForRemoteBootloaderUpdate(myOutport);
 
-
 	/* 5. Build a DMA stream between my inport and outport */
 	StartScastDMAStream(inport,myID,myOutport,myID,BIDIRECTIONAL,0xFFFFFFFF,0xFFFFFFFF,false);
 }
 
-/*-----------------------------------------------------------*/
-
-/* --- Setup a port for remote ST factory bootloader update:
- - Set baudrate to 57600
- - Enable even parity
- - Set datasize to 9 bits
+/***************************************************************************/
+/* Setup a port for remote ST factory bootloader update:
+ * Set baudrate to 57600
+ * Enable even parity
+ * Set datasize to 9 bits
  */
 void SetupPortForRemoteBootloaderUpdate(uint8_t port){
 
@@ -398,14 +516,14 @@ void SetupPortForRemoteBootloaderUpdate(uint8_t port){
 	huart->Init.Parity = UART_PARITY_EVEN;
 	huart->Init.WordLength = UART_WORDLENGTH_9B;
 	HAL_UART_Init(huart);
+
 	/* The CLI port RXNE interrupt might be disabled so enable here again to be sure */
 	__HAL_UART_ENABLE_IT(huart,UART_IT_RXNE);
 
 }
 
-/*-----------------------------------------------------------*/
-/* --- H1FR5 module initialization.
- */
+/***************************************************************************/
+/* H1FR5 module initialization */
 void Module_Peripheral_Init(void){
 
 	/* Array ports */
@@ -413,24 +531,23 @@ void Module_Peripheral_Init(void){
 	MX_USART2_UART_Init();
 	MX_USART3_UART_Init();
 	MX_USART4_UART_Init();
-	MX_USART5_UART_Init();
 	MX_USART6_UART_Init();
 
 	 //Circulating DMA Channels ON All Module
-	 for(int i=1;i<=NumOfPorts;i++)
+	 for(int i=1;i<=NUM_OF_PORTS;i++)
 		{
 		  if(GetUart(i)==&huart1)
-				   { index_dma[i-1]=&(DMA1_Channel1->CNDTR); }
+				   { dmaIndex[i-1]=&(DMA1_Channel1->CNDTR); }
 		  else if(GetUart(i)==&huart2)
-				   { index_dma[i-1]=&(DMA1_Channel2->CNDTR); }
+				   { dmaIndex[i-1]=&(DMA1_Channel2->CNDTR); }
 		  else if(GetUart(i)==&huart3)
-				   { index_dma[i-1]=&(DMA1_Channel3->CNDTR); }
+				   { dmaIndex[i-1]=&(DMA1_Channel3->CNDTR); }
 		  else if(GetUart(i)==&huart4)
-				   { index_dma[i-1]=&(DMA1_Channel4->CNDTR); }
+				   { dmaIndex[i-1]=&(DMA1_Channel4->CNDTR); }
 		  else if(GetUart(i)==&huart5)
-				   { index_dma[i-1]=&(DMA1_Channel5->CNDTR); }
+				   { dmaIndex[i-1]=&(DMA1_Channel5->CNDTR); }
 		  else if(GetUart(i)==&huart6)
-				   { index_dma[i-1]=&(DMA1_Channel6->CNDTR); }
+				   { dmaIndex[i-1]=&(DMA1_Channel6->CNDTR); }
 		}
 
 	 xTaskCreate(GPS,(const char* ) "GPS",configMINIMAL_STACK_SIZE,NULL,osPriorityNormal - osPriorityIdle,&GPSTaskHandle);
@@ -574,8 +691,8 @@ static Module_Status PollingSleepCLISafe(uint32_t period, long Numofsamples)
 		// Look for ENTER key to stop the stream
 		for (uint8_t chr=1 ; chr<MSG_RX_BUF_SIZE ; chr++)
 		{
-			if (UARTRxBuf[PcPort-1][chr] == '\r') {
-				UARTRxBuf[PcPort-1][chr] = 0;
+			if (UARTRxBuf[pcPort-1][chr] == '\r') {
+				UARTRxBuf[pcPort-1][chr] = 0;
 				flag=1;
 				return H1FR5_ERR_TERMINATED;
 			}
@@ -602,14 +719,14 @@ static Module_Status StreamMemsToCLI(uint32_t Numofsamples, uint32_t timeout, Sa
 
 	// TODO: Check if CLI is enable or not
 	for (uint8_t chr = 0; chr < MSG_RX_BUF_SIZE; chr++) {
-			if (UARTRxBuf[PcPort - 1][chr] == '\r' ) {
-				UARTRxBuf[PcPort - 1][chr] = 0;
+			if (UARTRxBuf[pcPort - 1][chr] == '\r' ) {
+				UARTRxBuf[pcPort - 1][chr] = 0;
 			}
 		}
 	if (1 == flag) {
 		flag = 0;
 		static char *pcOKMessage = (int8_t*) "Stop stream !\n\r";
-		writePxITMutex(PcPort, pcOKMessage, strlen(pcOKMessage), 10);
+		writePxITMutex(pcPort, pcOKMessage, strlen(pcOKMessage), 10);
 		return status;
 	}
 	if (period > timeout)
@@ -623,7 +740,7 @@ static Module_Status StreamMemsToCLI(uint32_t Numofsamples, uint32_t timeout, Sa
 		function((char *)pcOutputString, 100);
 
 
-		writePxMutex(PcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
+		writePxMutex(pcPort, (char *)pcOutputString, strlen((char *)pcOutputString), cmd500ms, HAL_MAX_DELAY);
 		if (PollingSleepCLISafe(period,Numofsamples) != H1FR5_OK)
 			break;
 	}
@@ -710,7 +827,7 @@ static Module_Status StreamMemsToPort(uint8_t port, uint8_t module, uint32_t Num
 		return H1FR5_ERR_WrongParams;
 	if (port == 0)
 		return H1FR5_ERR_WrongParams;
-//	if (port == PcPort) // Check if CLI is not enabled at that port!
+//	if (port == pcPort) // Check if CLI is not enabled at that port!
 //		return H1FR5_ERR_BUSY;
 
 	if (period > timeout)
@@ -814,19 +931,19 @@ Module_Status SamplePositionToPort(uint8_t port,uint8_t module)
 		}
 		else{
 			if (H1FR5_OK == status)
-					messageParams[1] = BOS_OK;
+					MessageParams[1] = BOS_OK;
 				else
-					messageParams[1] = BOS_ERROR;
-			messageParams[0] =FMT_FLOAT;
-			messageParams[2] =2;
-			messageParams[3] =*((__IO uint8_t* )(&longdegree) + 0);
-			messageParams[4] =*((__IO uint8_t* )(&longdegree) + 1);
-			messageParams[5] =*((__IO uint8_t* )(&longdegree) + 2);
-			messageParams[6] =*((__IO uint8_t* )(&longdegree) + 3);
-			messageParams[7] =*((__IO uint8_t* )(&latdegree) + 0);
-			messageParams[8] =*((__IO uint8_t* )(&latdegree) + 1);
-			messageParams[9] =*((__IO uint8_t* )(&latdegree) + 2);
-			messageParams[10] =*((__IO uint8_t* )(&latdegree) + 3);
+					MessageParams[1] = BOS_ERROR;
+			MessageParams[0] =FMT_FLOAT;
+			MessageParams[2] =2;
+			MessageParams[3] =*((__IO uint8_t* )(&longdegree) + 0);
+			MessageParams[4] =*((__IO uint8_t* )(&longdegree) + 1);
+			MessageParams[5] =*((__IO uint8_t* )(&longdegree) + 2);
+			MessageParams[6] =*((__IO uint8_t* )(&longdegree) + 3);
+			MessageParams[7] =*((__IO uint8_t* )(&latdegree) + 0);
+			MessageParams[8] =*((__IO uint8_t* )(&latdegree) + 1);
+			MessageParams[9] =*((__IO uint8_t* )(&latdegree) + 2);
+			MessageParams[10] =*((__IO uint8_t* )(&latdegree) + 3);
 
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,13);
@@ -853,14 +970,14 @@ Module_Status SampleUTCToPort(uint8_t port,uint8_t module)
 		}
 		else{
 			if (H1FR5_OK == status)
-					messageParams[1] = BOS_OK;
+					MessageParams[1] = BOS_OK;
 				else
-					messageParams[1] = BOS_ERROR;
-			messageParams[0] = FMT_UINT8;
-			messageParams[2] = 3;
-			messageParams[3] = hours;
-			messageParams[4] = min;
-			messageParams[5] = sec;
+					MessageParams[1] = BOS_ERROR;
+			MessageParams[0] = FMT_UINT8;
+			MessageParams[2] = 3;
+			MessageParams[3] = hours;
+			MessageParams[4] = min;
+			MessageParams[5] = sec;
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,6);
 		}
@@ -891,19 +1008,19 @@ Module_Status SampleSpeedToPort(uint8_t port,uint8_t module)
 		}
 		else{
 			if (H1FR5_OK == status)
-					messageParams[1] = BOS_OK;
+					MessageParams[1] = BOS_OK;
 				else
-					messageParams[1] = BOS_ERROR;
-			messageParams[0] =FMT_FLOAT;
-			messageParams[2] =2;
-			messageParams[3] =*((__IO uint8_t* )(&speedinch) + 0);
-			messageParams[4] =*((__IO uint8_t* )(&speedinch) + 1);
-			messageParams[5] =*((__IO uint8_t* )(&speedinch) + 2);
-			messageParams[6] =*((__IO uint8_t* )(&speedinch) + 3);
-			messageParams[7] =*((__IO uint8_t* )(&speedkm) + 0);
-			messageParams[8] =*((__IO uint8_t* )(&speedkm) + 1);
-			messageParams[9] =*((__IO uint8_t* )(&speedkm) + 2);
-			messageParams[10] =*((__IO uint8_t* )(&speedkm) + 3);
+					MessageParams[1] = BOS_ERROR;
+			MessageParams[0] =FMT_FLOAT;
+			MessageParams[2] =2;
+			MessageParams[3] =*((__IO uint8_t* )(&speedinch) + 0);
+			MessageParams[4] =*((__IO uint8_t* )(&speedinch) + 1);
+			MessageParams[5] =*((__IO uint8_t* )(&speedinch) + 2);
+			MessageParams[6] =*((__IO uint8_t* )(&speedinch) + 3);
+			MessageParams[7] =*((__IO uint8_t* )(&speedkm) + 0);
+			MessageParams[8] =*((__IO uint8_t* )(&speedkm) + 1);
+			MessageParams[9] =*((__IO uint8_t* )(&speedkm) + 2);
+			MessageParams[10] =*((__IO uint8_t* )(&speedkm) + 3);
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,11);
 		}
@@ -931,15 +1048,15 @@ Module_Status SampleHeightToPort(uint8_t port,uint8_t module)
 		}
 		else{
 			if (H1FR5_OK == status)
-					messageParams[1] = BOS_OK;
+					MessageParams[1] = BOS_OK;
 				else
-					messageParams[1] = BOS_ERROR;
-			messageParams[0] =FMT_FLOAT;
-			messageParams[2] =1;
-			messageParams[3] =*((__IO uint8_t* )(&height) + 0);
-			messageParams[4] =*((__IO uint8_t* )(&height) + 1);
-			messageParams[5] =*((__IO uint8_t* )(&height) + 2);
-			messageParams[6] =*((__IO uint8_t* )(&height) + 3);
+					MessageParams[1] = BOS_ERROR;
+			MessageParams[0] =FMT_FLOAT;
+			MessageParams[2] =1;
+			MessageParams[3] =*((__IO uint8_t* )(&height) + 0);
+			MessageParams[4] =*((__IO uint8_t* )(&height) + 1);
+			MessageParams[5] =*((__IO uint8_t* )(&height) + 2);
+			MessageParams[6] =*((__IO uint8_t* )(&height) + 3);
 
 			SendMessageToModule(module,CODE_READ_RESPONSE,sizeof(float)+3);
 		}

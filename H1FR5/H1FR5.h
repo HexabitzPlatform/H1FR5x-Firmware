@@ -45,7 +45,7 @@
 #define _USART2
 #define _USART3
 #define _USART4
-#define _USART5
+#define _USART6
 
 /* Port-UART mapping */
 #define UART_P1 &huart4
@@ -97,8 +97,8 @@
 #define	USART6_RX_PORT		GPIOB
 #define	USART6_AF			GPIO_AF8_USART6
 
-#define GPS_UART_HANDEL
-#define GPS_UART_DMA_HANDLER
+#define GPS_UART_HANDEL      &huart5
+#define GPS_UART_DMA_HANDLER &hdma_usart5_rx
 
 /* Module-specific Definitions */
 #define NUM_MODULE_PARAMS						10
