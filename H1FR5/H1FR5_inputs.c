@@ -2,7 +2,7 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_inputs.c
+ File Name     : H0BR4_inputs.c
  Description   : Source code for Bitz digital and analog inputs.
 
  */
@@ -32,6 +32,7 @@ uint16_t adcValueTemp =0;
 uint16_t adcValueVref =0;
 float Percentage =0.0f;
 float Current =0.0f;
+uint8_t adcDeInitFlag;
 
 ADC_HandleTypeDef hadc;
 ADC_ChannelConfTypeDef sConfig ={0};
@@ -538,7 +539,11 @@ BOS_Status ADCSelectPort(uint8_t ADC_port){
 		HAL_UART_DeInit(GetUart(ADC_port));
 		PortStatus[ADC_port] =CUSTOM;
 		if(adcEnableFlag == 0)
+		{
 			MX_ADC_Init();
+			adcDeInitFlag = 0;
+		}
+
 	}
 	else
 		return Status =BOS_ERR_ADC_WRONG_PORT;
@@ -587,7 +592,11 @@ BOS_Status ReadADCChannel(uint8_t Port,char *side,float *ADC_Value){
 void ReadTempAndVref(float *temp,float *Vref){
 
 	if(0 == adcEnableFlag)
+	{
 		MX_ADC_Init();
+		adcDeInitFlag = 0;
+	}
+
 
 	/* Enable internal temperature channel */
 	sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
@@ -641,13 +650,21 @@ BOS_Status GetReadPercentage(uint8_t port,char *side,float *precentageValue){
 }
 
 /***************************************************************************/
+
 BOS_Status ADCDeinitChannel(uint8_t port){
 	BOS_Status Status =BOS_OK;
 
 	if(port == ADC12_PORT || port == ADC34_PORT){
-		HAL_ADC_DeInit(&hadc);
-		HAL_UART_Init(GetUart(port));
+		if(adcDeInitFlag == 0)
+		{
+			HAL_ADC_DeInit(&hadc);
+			adcDeInitFlag = 1;
+		}
+
+		UART_HandleTypeDef* huart = GetUart(port);
+		HAL_UART_Init(huart);
 		PortStatus[port] =FREE;
+		DMA_MSG_RX_Setup(huart,UARTDMAHandler[port - 1]);
 		adcEnableFlag =0;
 	}
 	else
