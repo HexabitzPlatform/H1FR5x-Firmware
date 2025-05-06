@@ -778,6 +778,7 @@ void GPS(void *argument) {
 	}
 }
 
+/***************************************************************************/
 static Module_Status PollingSleepCLISafe(uint32_t period, long Numofsamples) {
 	const unsigned DELTA_SLEEP_MS = 100; // milliseconds
 	long numDeltaDelay = period / DELTA_SLEEP_MS;
@@ -804,11 +805,11 @@ static Module_Status PollingSleepCLISafe(uint32_t period, long Numofsamples) {
 }
 
 /***************************************************************************/
-/* */
 void GPSHandel(void) {
 	Incoming_Message_Handel();
 }
 
+/***************************************************************************/
 /*
  * brief: Samples data and exports it to a specified port.
  * param dstModule: The module number to export data from.
@@ -974,6 +975,7 @@ Module_Status SampleToPort(uint8_t dstModule, uint8_t dstPort, All_Data dataFunc
 	return Status;
 }
 
+/***************************************************************************/
 /* Streams a single sensor data sample to the terminal.
  * dstPort: Port number to stream data to.
  * dataFunction: Function to sample data (e.g., ACC, GYRO, MAG, TEMP).
@@ -1054,6 +1056,7 @@ Module_Status SampleToTerminal(uint8_t dstPort,All_Data dataFunction)
 	return Status;
 }
 
+/***************************************************************************/
 /*
  * brief: Streams data to the specified port and module with a given number of samples.
  * param targetModule: The target module to which data will be streamed.
@@ -1063,6 +1066,7 @@ Module_Status SampleToTerminal(uint8_t dstPort,All_Data dataFunction)
  * param streamTimeout: The interval (in milliseconds) between successive data transmissions.
  * retval: of type Module_Status indicating the success or failure of the operation.
  */
+
 Module_Status StreamtoPort(uint8_t dstModule,uint8_t dstPort,All_Data dataFunction,uint32_t numOfSamples,uint32_t streamTimeout)
 {
 	Module_Status Status =H1FR5_OK;
@@ -1099,6 +1103,7 @@ Module_Status StreamtoPort(uint8_t dstModule,uint8_t dstPort,All_Data dataFuncti
 	return Status;
 }
 
+/***************************************************************************/
 /*
  * brief: Streams data to the specified terminal port with a given number of samples.
  * param targetPort: The port number on the terminal.
@@ -1142,6 +1147,7 @@ Module_Status StreamToTerminal(uint8_t dstPort,All_Data dataFunction,uint32_t nu
 	return Status;
 }
 
+/***************************************************************************/
 /*
  * @brief: Streams data to a buffer.
  * @param buffer: Pointer to the buffer where data will be stored.
@@ -1171,6 +1177,7 @@ Module_Status StreamToBuffer(float *buffer,All_Data function, uint32_t Numofsamp
 	}
 }
 
+/***************************************************************************/
 /* Callback function triggered by a timer to manage data streaming.
  * xTimerStream: Handle of the timer that triggered the callback.
  */
@@ -1200,7 +1207,6 @@ void StreamTimeCallback(TimerHandle_t xTimerStream)
 		}
 	}
 }
-
 
 /***************************************************************************/
 static Module_Status StreamToCLI(uint32_t Numofsamples, uint32_t timeout, SampleToString function) {
@@ -1243,7 +1249,6 @@ static Module_Status StreamToCLI(uint32_t Numofsamples, uint32_t timeout, Sample
 
 	return status;
 }
-
 
 /***************************************************************************/
 /* Streams sensor data to a buffer.
@@ -1356,10 +1361,7 @@ void SampleHeightBuf(float *buffer){
 }
 
 
-
-
 /***************************************************************************/
-
 void SamplePositionToString(char *cstring, size_t maxLen) {
 	float longdegree, latdegree;
 	char latindicator, longindicator;
@@ -1386,7 +1388,8 @@ void SampleSpeedToString(char *cstring, size_t maxLen) {
 	snprintf(cstring, maxLen, "GPS: speedinch: %.2f , speedkm: %.2f \r\n", speedinch, speedkm);
 
 }
-/*-----------------------------------------------------------*/
+
+/***************************************************************************/
 void SampleHeightToString(char *cstring, size_t maxLen) {
 	float height;
 
@@ -1395,7 +1398,7 @@ void SampleHeightToString(char *cstring, size_t maxLen) {
 
 }
 
-/*-----------------------------------------------------------*/
+/***************************************************************************/
 void stopStreamMems(void) {
 	stopStream = true;
 }

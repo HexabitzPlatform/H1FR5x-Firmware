@@ -179,8 +179,8 @@ Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
 
 Module_Status SampleToPort(uint8_t dstModule, uint8_t dstPort, All_Data dataFunction);
-Module_Status StreamtoPort(uint8_t dstModule,uint8_t dstPort,All_Data dataFunction,uint32_t numOfSamples,uint32_t streamTimeout);
 Module_Status SampleToTerminal(uint8_t dstPort,All_Data dataFunction);
+Module_Status StreamtoPort(uint8_t dstModule,uint8_t dstPort,All_Data dataFunction,uint32_t numOfSamples,uint32_t streamTimeout);
 Module_Status StreamToTerminal(uint8_t port,All_Data function,uint32_t Numofsamples, uint32_t timeout);
 Module_Status StreamToBuffer(float *buffer,All_Data function, uint32_t Numofsamples, uint32_t timeout);
 void StreamTimeCallback(TimerHandle_t xTimerStream);
