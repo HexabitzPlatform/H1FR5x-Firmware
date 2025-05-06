@@ -2,7 +2,7 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H0BR4_inputs.c
+ File Name     : H1FR5_inputs.c
  Description   : Source code for Bitz digital and analog inputs.
 
  */

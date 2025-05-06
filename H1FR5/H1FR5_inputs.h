@@ -2,16 +2,13 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H0BR4_inputs.h
+ File Name     : H1FR5_inputs.h
  Description   : header file for Bitz digital and analog inputs.
  
 */
 
 /* Includes ****************************************************************/
 #include "BOS.h"
-#include "stm32g0xx_hal_adc.h"
-#include "stm32g0xx_hal_adc_ex.h"
-#include "string.h"
 
 /* ADC Macro Definitions ***************************************************/
 /* Port-ADC Definitions */

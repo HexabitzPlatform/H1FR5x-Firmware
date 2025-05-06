@@ -118,6 +118,12 @@
 #define STREAM_TO_Terminal    3
 #define DEFAULT               4
 
+#define MIN_PERIOD_MS		     100
+#define MAX_TIMEOUT_MS		     0xFFFFFFF
+/* Macros definitions */
+#define STREAM_MODE_TO_PORT      1
+#define STREAM_MODE_TO_TERMINAL  2
+
 /* Module-specific Type Definition *****************************************/
 /* Module-status Type Definition */
 typedef enum {
@@ -172,10 +178,13 @@ Module_Status GetSpeed(float *speedinch, float *speedkm);
 Module_Status GetUTC(uint8_t *hours, uint8_t *min, uint8_t *sec);
 Module_Status GetPosition(float * longdegree, float * latdegree, char *longindicator,char *latindicator);
 
+Module_Status SampleToTerminal(uint8_t dstPort,All_Data dataFunction);
 Module_Status StreamToTerminal(uint8_t port,All_Data function,uint32_t Numofsamples, uint32_t timeout);
-Module_Status StreamToBuffer(float *buffer,DataBuffer function, uint32_t Numofsamples, uint32_t timeout);
-Module_Status StreamToPort(uint8_t module,uint8_t port,All_Data function,  uint32_t Numofsamples, uint32_t timeout);
-
+//Module_Status StreamToBuffer(float *buffer,DataBuffer function, uint32_t Numofsamples, uint32_t timeout);
+Module_Status StreamToBuffer(float *buffer,All_Data function, uint32_t Numofsamples, uint32_t timeout);
+//Module_Status StreamToPort(uint8_t module,uint8_t port,All_Data function,  uint32_t Numofsamples, uint32_t timeout);
+Module_Status SampleToPort(uint8_t dstModule, uint8_t dstPort, All_Data dataFunction);
+Module_Status StreamtoPort(uint8_t dstModule,uint8_t dstPort,All_Data dataFunction,uint32_t numOfSamples,uint32_t streamTimeout);
 #endif /* H1FR5_H */
 
 /***************** (C) COPYRIGHT HEXABITZ ***** END OF FILE ****************/
