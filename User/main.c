@@ -1,36 +1,38 @@
 /*
- BitzOS (BOS) V0.3.6 - Copyright (C) 2017-2024 Hexabitz
+ BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
  File Name     : main.c
  Description   : Main program body.
  */
-/* Includes ------------------------------------------------------------------*/
+
+/* Includes ****************************************************************/
 #include "BOS.h"
 
-/* Private variables ---------------------------------------------------------*/
+/* Private variables *******************************************************/
 
-/* Private function prototypes -----------------------------------------------*/
+/* Private Function Prototypes *********************************************/
 
-/* Main function ------------------------------------------------------------*/
-
+/* Main Function ***********************************************************/
 int main(void){
 
-	Module_Init();		//Initialize Module &  BitzOS
+	/* Initialize Module &  BitzOS */
+	Module_Init();
 
-	//Don't place your code here.
-	for(;;){}
+	/* Don't place your code here */
+	for(;;){
+	}
 }
 
-/*-----------------------------------------------------------*/
-
+/***************************************************************************/
 /* User Task */
 void UserTask(void *argument){
-HAL_GPIO_WritePin(_IND_LED_PORT, _IND_LED_PIN, 1);
-	// put your code here, to run repeatedly.
+
+	/* put your code here, to run repeatedly. */
 	while(1){
 
 	}
 }
 
-/*-----------------------------------------------------------*/
+/***************************************************************************/
+/***************** (C) COPYRIGHT HEXABITZ ***** END OF FILE ****************/

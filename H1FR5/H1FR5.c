@@ -34,13 +34,6 @@ TaskHandle_t GPSTaskHandle = NULL;
 
 /* Private Variables *******************************************************/
 uint8_t flag;
-uint8_t tofMode;
-uint8_t port1, module1;
-uint8_t port2 ,module2,mode2,mode1;
-uint8_t port3 ,module3,mode3;
-uint32_t Numofsamples1 ,timeout1;
-uint32_t Numofsamples2 ,timeout2;
-uint32_t Numofsamples3 ,timeout3;
 
 /* Streaming variables */
 static bool stopStream = false;         /* Flag to indicate whether to stop streaming process */
@@ -724,58 +717,9 @@ void GPS(void *argument) {
 	/* Infinite loop */
 	for (;;) {
 		GPSHandel();
-		/*  */
-		switch (tofMode) {
-		case STREAM_TO_PORT:
-
-			switch (mode1) {
-			case POSITION:
-				StreamtoPort(module2, port2, POSITION, Numofsamples2, timeout2);
-				break;
-			case UTC:
-				StreamtoPort(module2, port2, UTC, Numofsamples2, timeout2);
-				break;
-			case SPEED:
-				StreamtoPort(module2, port2, SPEED, Numofsamples2, timeout2);
-				break;
-			case HEIGHT:
-				StreamtoPort(module2, port2, HEIGHT, Numofsamples2, timeout2);
-				break;
-			default:
-				break;
-			}
-
-			break;
-
-		case STREAM_TO_Terminal:
-
-			switch (mode1) {
-			case POSITION:
-				StreamToTerminal(port3, POSITION, Numofsamples3, timeout3);
-				break;
-
-			case UTC:
-				StreamToTerminal(port3, UTC, Numofsamples3, timeout3);;
-				break;
-
-			case SPEED:
-				StreamToTerminal(port3, SPEED, Numofsamples3, timeout3);;
-				break;
-
-			case HEIGHT:
-				StreamToTerminal(port3, HEIGHT, Numofsamples3, timeout3);;
-				break;
-
-			default:
-				break;
-			}
-
-			break;
-		default:
-			break;
 		}
 		taskYIELD();
-	}
+
 }
 
 /***************************************************************************/
@@ -811,168 +755,170 @@ void GPSHandel(void) {
 
 /***************************************************************************/
 /*
- * brief: Samples data and exports it to a specified port.
- * param dstModule: The module number to export data from.
- * param dstPort: The port number to export data to.
- * param dataFunction: Function to sample data (e.g., ACC, GYRO, MAG, TEMP).
- * retval: of type Module_Status indicating the success or failure of the operation.
+ * @brief: Samples data and exports it to a specified port.
+ * @param dstModule: The module number to export data from.
+ * @param dstPort: The port number to export data to.
+ * @param dataFunction: Function to sample data (e.g., HEIGHT, SPEED, UTC, POSITION).
+ * @retval: Module status indicating the success or failure of the operation.
  */
+Module_Status SampleToPort(uint8_t dstModule, uint8_t dstPort, All_Data dataFunction) {
+    Module_Status Status = H1FR5_OK;
+    static uint8_t Temp[12] = {0}; /* Buffer for data transmission */
+    float Height = 0.0f;
+    float SpeedInch = 0.0f, SpeedKm = 0.0f;
+    float LongDegree = 0.0f, LatDegree = 0.0f;
+    uint8_t LongIndicator, LatIndicator;
+    uint8_t Hours, Minutes, Seconds;
 
-Module_Status SampleToPort(uint8_t dstModule, uint8_t dstPort, All_Data dataFunction)
-{
-		Module_Status Status = H1FR5_OK;
-	static uint8_t Temp[12] ={0}; /* Buffer for data transmission */
-	float Height =0.0f;
-	float SpeedInch =0.0f, SpeedKm =0.0f;
-	float LongDegree =0.0f, LatDegree =0.0f;
-	uint8_t LongIndicator,LatIndicator;
-	uint8_t Hours, Minutes, Seconds;
+    /* Check if the port and module ID are valid */
+    if ((dstPort == 0) && (dstModule == myID)) {
+        return H1FR5_ERR_WRONGPARAMS;
+    }
 
-	/* Check if the port and module ID are valid */
-	if((dstPort == 0) && (dstModule == myID)){
-		return H1FR5_ERR_WRONGPARAMS;
-	}
+    /* Sample and export data based on function type */
+    switch (dataFunction) {
+        case HEIGHT:
+            if (GetHeight(&Height) != H1FR5_OK) {
+                return H1FR5_ERROR;
+            }
 
-	/* Sample and export data based on function type */
-	switch(dataFunction){
-		case HEIGHT:
-			if(GetHeight(&Height) != H1FR5_OK){
-				return H1FR5_ERROR;
-			}
+            if (dstModule == myID) {
+                /* LSB first */
+                Temp[0] = (uint8_t)(*(uint32_t*)&Height);         /* Height byte 0 */
+                Temp[1] = (uint8_t)((*(uint32_t*)&Height) >> 8);  /* Height byte 1 */
+                Temp[2] = (uint8_t)((*(uint32_t*)&Height) >> 16); /* Height byte 2 */
+                Temp[3] = (uint8_t)((*(uint32_t*)&Height) >> 24); /* Height byte 3 */
 
-			if(dstModule == myID || dstModule == 0){
-				/* LSB first */
-				Temp[0] =(uint8_t )((*(uint32_t* )&Height) >> 0);
-				Temp[1] =(uint8_t )((*(uint32_t* )&Height) >> 8);
-				Temp[2] =(uint8_t )((*(uint32_t* )&Height) >> 16);
-				Temp[3] =(uint8_t )((*(uint32_t* )&Height) >> 24);
+                writePxITMutex(dstPort, (char*)&Temp[0], 4 * sizeof(uint8_t), 10);
+            } else {
+                /* LSB first */
+                MessageParams[0] = FMT_FLOAT;                                    /* Data format: float */
+                MessageParams[1] = (H1FR5_OK == Status) ? BOS_OK : BOS_ERROR;   /* Operation status */
+                MessageParams[2] = 1;                                           /* Number of elements (Height) */
+                MessageParams[3] = (uint8_t)(CODE_H1FR5_GET_HIEGHT >> 0);      /* Command code LSB */
+                MessageParams[4] = (uint8_t)(CODE_H1FR5_GET_HIEGHT >> 8);      /* Command code MSB */
+                MessageParams[5] = (uint8_t)(*(uint32_t*)&Height);             /* Height byte 0 */
+                MessageParams[6] = (uint8_t)((*(uint32_t*)&Height) >> 8);      /* Height byte 1 */
+                MessageParams[7] = (uint8_t)((*(uint32_t*)&Height) >> 16);     /* Height byte 2 */
+                MessageParams[8] = (uint8_t)((*(uint32_t*)&Height) >> 24);     /* Height byte 3 */
 
-				writePxITMutex(dstPort,(char* )&Temp[0],4 * sizeof(uint8_t),10);
-			}
-			else{
-				/* LSB first */
-				MessageParams[1] =(H1FR5_OK == Status) ?BOS_OK: BOS_ERROR;
-				MessageParams[0] =FMT_FLOAT;
-				MessageParams[2] =1;
-				MessageParams[3] =(uint8_t )((*(uint32_t* )&Height) >> 0);
-				MessageParams[4] =(uint8_t )((*(uint32_t* )&Height) >> 8);
-				MessageParams[5] =(uint8_t )((*(uint32_t* )&Height) >> 16);
-				MessageParams[6] =(uint8_t )((*(uint32_t* )&Height) >> 24);
+                SendMessageToModule(dstModule, CODE_READ_RESPONSE, (sizeof(float) * 1) + 5);
+            }
+            break;
 
-				SendMessageToModule(dstModule,CODE_READ_RESPONSE,(sizeof(float) * 1) + 3);
-			}
-			break;
+        case SPEED:
+            if (GetSpeed(&SpeedInch, &SpeedKm) != H1FR5_OK) {
+                return H1FR5_ERROR;
+            }
 
-		case SPEED:
-			if(GetSpeed(&SpeedInch, &SpeedKm) != H1FR5_OK){
-				return H1FR5_ERROR;
-			}
+            if (dstModule == myID) {
+                /* LSB first */
+                Temp[0] = (uint8_t)(*(uint32_t*)&SpeedInch);         /* SpeedInch byte 0 */
+                Temp[1] = (uint8_t)((*(uint32_t*)&SpeedInch) >> 8);  /* SpeedInch byte 1 */
+                Temp[2] = (uint8_t)((*(uint32_t*)&SpeedInch) >> 16); /* SpeedInch byte 2 */
+                Temp[3] = (uint8_t)((*(uint32_t*)&SpeedInch) >> 24); /* SpeedInch byte 3 */
+                Temp[4] = (uint8_t)(*(uint32_t*)&SpeedKm);           /* SpeedKm byte 0 */
+                Temp[5] = (uint8_t)((*(uint32_t*)&SpeedKm) >> 8);    /* SpeedKm byte 1 */
+                Temp[6] = (uint8_t)((*(uint32_t*)&SpeedKm) >> 16);   /* SpeedKm byte 2 */
+                Temp[7] = (uint8_t)((*(uint32_t*)&SpeedKm) >> 24);   /* SpeedKm byte 3 */
 
-			if(dstModule == myID || dstModule == 0){
-				/* LSB first */
-				Temp[0] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 0);
-				Temp[1] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 8);
-				Temp[2] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 16);
-				Temp[3] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 24);
-				Temp[4] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 0);
-				Temp[5] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 8);
-				Temp[6] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 16);
-				Temp[7] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 24);
+                writePxITMutex(dstPort, (char*)&Temp[0], 8 * sizeof(uint8_t), 10);
+            } else {
+                /* LSB first */
+                MessageParams[0] = FMT_FLOAT;                                    /* Data format: float */
+                MessageParams[1] = (H1FR5_OK == Status) ? BOS_OK : BOS_ERROR;   /* Operation status */
+                MessageParams[2] = 2;                                           /* Number of elements (SpeedInch, SpeedKm) */
+                MessageParams[3] = (uint8_t)(CODE_H1FR5_GET_SPEED >> 0);       /* Command code LSB */
+                MessageParams[4] = (uint8_t)(CODE_H1FR5_GET_SPEED >> 8);       /* Command code MSB */
+                MessageParams[5] = (uint8_t)(*(uint32_t*)&SpeedInch);          /* SpeedInch byte 0 */
+                MessageParams[6] = (uint8_t)((*(uint32_t*)&SpeedInch) >> 8);   /* SpeedInch byte 1 */
+                MessageParams[7] = (uint8_t)((*(uint32_t*)&SpeedInch) >> 16);  /* SpeedInch byte 2 */
+                MessageParams[8] = (uint8_t)((*(uint32_t*)&SpeedInch) >> 24);  /* SpeedInch byte 3 */
+                MessageParams[9] = (uint8_t)(*(uint32_t*)&SpeedKm);            /* SpeedKm byte 0 */
+                MessageParams[10] = (uint8_t)((*(uint32_t*)&SpeedKm) >> 8);    /* SpeedKm byte 1 */
+                MessageParams[11] = (uint8_t)((*(uint32_t*)&SpeedKm) >> 16);   /* SpeedKm byte 2 */
+                MessageParams[12] = (uint8_t)((*(uint32_t*)&SpeedKm) >> 24);   /* SpeedKm byte 3 */
 
-				writePxITMutex(dstPort,(char* )&Temp[0],8 * sizeof(uint8_t),10);
-			}
-			else{
-				/* LSB first */
-				MessageParams[1] =(H1FR5_OK == Status) ?BOS_OK: BOS_ERROR;
-				MessageParams[0] =FMT_FLOAT;
-				MessageParams[2] =2;
-				MessageParams[3] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 0);
-				MessageParams[4] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 8);
-				MessageParams[5] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 16);
-				MessageParams[6] =(uint8_t )((*(uint32_t* )&SpeedInch) >> 24);
-				MessageParams[7] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 0);
-				MessageParams[8] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 8);
-				MessageParams[9] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 16);
-				MessageParams[10] =(uint8_t )((*(uint32_t* )&SpeedKm) >> 24);
+                SendMessageToModule(dstModule, CODE_READ_RESPONSE, (sizeof(float) * 2) + 5);
+            }
+            break;
 
-				SendMessageToModule(dstModule,CODE_READ_RESPONSE,(sizeof(float) * 2) + 3);
-			}
-			break;
+        case UTC:
+            if (GetUTC(&Hours, &Minutes, &Seconds) != H1FR5_OK) {
+                return H1FR5_ERROR;
+            }
 
-		case UTC:
-			if(GetUTC(&Hours, &Minutes, &Seconds) != H1FR5_OK){
-				return H1FR5_ERROR;
-			}
+            if (dstModule == myID) {
+                /* LSB first */
+                Temp[0] = Hours;   /* Hours */
+                Temp[1] = Minutes; /* Minutes */
+                Temp[2] = Seconds; /* Seconds */
 
-			if(dstModule == myID || dstModule == 0){
-				/* LSB first */
-				Temp[0] = Hours;
-				Temp[1] = Minutes;
-				Temp[2] = Seconds;
+                writePxITMutex(dstPort, (char*)&Temp[0], 3 * sizeof(uint8_t), 10);
+            } else {
+                /* LSB first */
+                MessageParams[0] = FMT_UINT8;                                    /* Data format: int32 */
+                MessageParams[1] = (H1FR5_OK == Status) ? BOS_OK : BOS_ERROR;   /* Operation status */
+                MessageParams[2] = 3;                                           /* Number of elements (Hours, Minutes, Seconds) */
+                MessageParams[3] = (uint8_t)(CODE_H1FR5_GET_UTC >> 0);         /* Command code LSB */
+                MessageParams[4] = (uint8_t)(CODE_H1FR5_GET_UTC >> 8);         /* Command code MSB */
+                MessageParams[5] = Hours;                                      /* Hours */
+                MessageParams[6] = Minutes;                                    /* Minutes */
+                MessageParams[7] = Seconds;                                    /* Seconds */
 
-				writePxITMutex(dstPort,(char* )&Temp[0],3 * sizeof(uint8_t),10);
-			}
-			else{
-				/* LSB first */
-				MessageParams[1] =(H1FR5_OK == Status) ?BOS_OK: BOS_ERROR;
-				MessageParams[0] =FMT_INT32;
-				MessageParams[2] =3;
-				MessageParams[3] = Hours;
-				MessageParams[4] = Minutes;
-				MessageParams[5] = Seconds;
+                SendMessageToModule(dstModule, CODE_READ_RESPONSE, (sizeof(uint8_t) * 3) + 5);
+            }
+            break;
 
-				SendMessageToModule(dstModule,CODE_READ_RESPONSE,(sizeof(uint8_t) * 3) + 3);
-			}
-			break;
+        case POSITION:
+            if (GetPosition(&LongDegree, &LatDegree, &LongIndicator, &LatIndicator) != H1FR5_OK) {
+                return H1FR5_ERROR;
+            }
 
-		case POSITION:
-			if(GetPosition(&LongDegree, &LatDegree, &LongIndicator, &LatIndicator) != H1FR5_OK){
-				return H1FR5_ERROR;
-			}
+            if (dstModule == myID) {
+                /* LSB first */
+                Temp[0] = (uint8_t)(*(uint32_t*)&LongDegree);         /* LongDegree byte 0 */
+                Temp[1] = (uint8_t)((*(uint32_t*)&LongDegree) >> 8);  /* LongDegree byte 1 */
+                Temp[2] = (uint8_t)((*(uint32_t*)&LongDegree) >> 16); /* LongDegree byte 2 */
+                Temp[3] = (uint8_t)((*(uint32_t*)&LongDegree) >> 24); /* LongDegree byte 3 */
+                Temp[4] = (uint8_t)(*(uint32_t*)&LatDegree);          /* LatDegree byte 0 */
+                Temp[5] = (uint8_t)((*(uint32_t*)&LatDegree) >> 8);   /* LatDegree byte 1 */
+                Temp[6] = (uint8_t)((*(uint32_t*)&LatDegree) >> 16);  /* LatDegree byte 2 */
+                Temp[7] = (uint8_t)((*(uint32_t*)&LatDegree) >> 24);  /* LatDegree byte 3 */
+                Temp[8] = LongIndicator;                              /* LongIndicator */
+                Temp[9] = LatIndicator;                               /* LatIndicator */
 
-			if(dstModule == myID || dstModule == 0){
-				/* LSB first */
-				Temp[0] =(uint8_t )((*(uint32_t* )&LongDegree) >> 0);
-				Temp[1] =(uint8_t )((*(uint32_t* )&LongDegree) >> 8);
-				Temp[2] =(uint8_t )((*(uint32_t* )&LongDegree) >> 16);
-				Temp[3] =(uint8_t )((*(uint32_t* )&LongDegree) >> 24);
-				Temp[4] =(uint8_t )((*(uint32_t* )&LatDegree) >> 0);
-				Temp[5] =(uint8_t )((*(uint32_t* )&LatDegree) >> 8);
-				Temp[6] =(uint8_t )((*(uint32_t* )&LatDegree) >> 16);
-				Temp[7] =(uint8_t )((*(uint32_t* )&LatDegree) >> 24);
-				Temp[8] = LongIndicator;
-				Temp[9] = LatIndicator;
+                writePxITMutex(dstPort, (char*)&Temp[0], 10 * sizeof(uint8_t), 10);
+            } else {
+                /* LSB first */
+                MessageParams[0] = FMT_FLOAT;                                    /* Data format: float */
+                MessageParams[1] = (H1FR5_OK == Status) ? BOS_OK : BOS_ERROR;   /* Operation status */
+                MessageParams[2] = 4;                                           /* Number of elements (LongDegree, LatDegree, LongIndicator, LatIndicator) */
+                MessageParams[3] = (uint8_t)(CODE_H1FR5_GET_POSITION >> 0);    /* Command code LSB */
+                MessageParams[4] = (uint8_t)(CODE_H1FR5_GET_POSITION >> 8);    /* Command code MSB */
+                MessageParams[5] = (uint8_t)(*(uint32_t*)&LongDegree);         /* LongDegree byte 0 */
+                MessageParams[6] = (uint8_t)((*(uint32_t*)&LongDegree) >> 8);  /* LongDegree byte 1 */
+                MessageParams[7] = (uint8_t)((*(uint32_t*)&LongDegree) >> 16); /* LongDegree byte 2 */
+                MessageParams[8] = (uint8_t)((*(uint32_t*)&LongDegree) >> 24); /* LongDegree byte 3 */
+                MessageParams[9] = (uint8_t)(*(uint32_t*)&LatDegree);          /* LatDegree byte 0 */
+                MessageParams[10] = (uint8_t)((*(uint32_t*)&LatDegree) >> 8);  /* LatDegree byte 1 */
+                MessageParams[11] = (uint8_t)((*(uint32_t*)&LatDegree) >> 16); /* LatDegree byte 2 */
+                MessageParams[12] = (uint8_t)((*(uint32_t*)&LatDegree) >> 24); /* LatDegree byte 3 */
+                MessageParams[13] = LongIndicator;                             /* LongIndicator */
+                MessageParams[14] = LatIndicator;                              /* LatIndicator */
 
-				writePxITMutex(dstPort,(char* )&Temp[0],10 * sizeof(uint8_t),10);
-			}
-			else{
-				/* LSB first */
-				MessageParams[1] =(H1FR5_OK == Status) ?BOS_OK: BOS_ERROR;
-				MessageParams[0] =FMT_FLOAT;
-				MessageParams[2] =10;
-				MessageParams[3] =(uint8_t )((*(uint32_t* )&LongDegree) >> 0);
-				MessageParams[4] =(uint8_t )((*(uint32_t* )&LongDegree) >> 8);
-				MessageParams[5] =(uint8_t )((*(uint32_t* )&LongDegree) >> 16);
-				MessageParams[6] =(uint8_t )((*(uint32_t* )&LongDegree) >> 24);
-				MessageParams[7] =(uint8_t )((*(uint32_t* )&LatDegree) >> 0);
-				MessageParams[8] =(uint8_t )((*(uint32_t* )&LatDegree) >> 8);
-				MessageParams[9] =(uint8_t )((*(uint32_t* )&LatDegree) >> 16);
-				MessageParams[10] =(uint8_t )((*(uint32_t* )&LatDegree) >> 24);
-				MessageParams[11] = LongIndicator;
-				MessageParams[12] = LatIndicator;
+                SendMessageToModule(dstModule, CODE_READ_RESPONSE, (sizeof(float) * 2 + sizeof(uint8_t) * 2) + 5);
+            }
+            break;
 
-				SendMessageToModule(dstModule,CODE_READ_RESPONSE,(sizeof(uint8_t) * 10) + 3);
-			}
-			break;
+        default:
+            return H1FR5_ERR_WRONGPARAMS;
+    }
 
-		default:
-			return H1FR5_ERR_WRONGPARAMS;
-	}
+    /* Clear the temp buffer */
+    memset(&Temp[0], 0, sizeof(Temp));
 
-	/* Clear the temp buffer */
-	memset(&Temp[0],0,sizeof(Temp));
-
-	return Status;
+    return Status;
 }
 
 /***************************************************************************/
