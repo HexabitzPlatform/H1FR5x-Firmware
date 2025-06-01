@@ -219,6 +219,11 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
+			<name>Thirdparty/EEPROM_Emul</name>
+			<type>2</type>
+			<locationURI>PARENT-2-PROJECT_LOC/H08R7x-Firmware/Thirdparty/EEPROM_Emul</locationURI>
+		</link>
+		<link>
 			<name>Thirdparty/Middleware</name>
 			<type>2</type>
 			<locationURI>virtual:/virtual</locationURI>
@@ -257,6 +262,16 @@
 			<name>Thirdparty/CMSIS/STM32G0xx</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/CMSIS/STM32G0xx</locationURI>
+		</link>
+		<link>
+			<name>Thirdparty/EEPROM_Emul/Core</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/EEPROM_Emul/Core</locationURI>
+		</link>
+		<link>
+			<name>Thirdparty/EEPROM_Emul/Porting</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/Thirdparty/EEPROM_Emul/Porting</locationURI>
 		</link>
 		<link>
 			<name>Thirdparty/Middleware/STM32G0xx</name>

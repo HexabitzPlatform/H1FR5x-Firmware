@@ -25,6 +25,25 @@ GPIO_InitTypeDef GPIO_InitStruct = {0};
 TIM_HandleTypeDef htim16; /* micro-second delay counter */
 //TIM_HandleTypeDef htim15; /* milli-second delay counter */
 TIM_HandleTypeDef htim17; /* milli-second delay counter */
+IWDG_HandleTypeDef hiwdg;
+
+/* IWDG init function */
+void MX_IWDG_Init(void){
+
+	/* Reload Value = [(Time * 32 KHz) / (4 * 2^(pr) * 1000)] - 1
+	 * RL = [(500 mS * 32000) / (4 * 2^1 * 1000)]  - 1 = 2000 - 1 = 1999
+	 * timeout time = 500 mS
+	 * Pre-scaler = 8
+	 * Reload Value = 1999
+	 *  */
+
+	hiwdg.Instance = IWDG;
+	hiwdg.Init.Prescaler = IWDG_PRESCALER_8;
+	hiwdg.Init.Window = IWDG_WINDOW_DISABLE;
+	hiwdg.Init.Reload =1999;
+
+	HAL_IWDG_Init(&hiwdg);
+}
 
 /*  Micro-seconds timebase init function - TIM14 (16-bit)
  */
