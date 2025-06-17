@@ -2,8 +2,9 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_uart.h
- Description   : Header file provides configuration for USART instances.
+ File Name  : H1FR5_uart.h
+ Description: Declares UART operation functions.
+ UART: Mutex-protected read/write (polling/interrupt), port direction messaging.
  */
 
 /* Define to prevent recursive inclusion ***********************************/

@@ -1,16 +1,14 @@
 /*
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
- 
- File Name     : H1FR5.h
- Description   : Header file for module H1FR5.
- 	 	 	 	 (Description_of_module)
 
-(Description of Special module peripheral configuration):
->>
->>
->>
- */
+ File Name  : H1FR5.h
+ Description: Header file for module H1FR5 hardware configuration and GPS interfaces.
+ UART: Five ports (P1-P5) mapped to USART1-4, USART6 with GPIO pin assignments; GPS UART on PB0(RX)/PB1(TX) for SAM-M10Q.
+ GPIO: Indicator LED on PB6.
+ GPS: Supports sampling and streaming of position, UTC, speed, and height data.
+ Module-specific definitions: Port-UART mappings, GPS UART/DMA, and data buffer configurations.
+*/
 
 /* Define to prevent recursive inclusion ***********************************/
 #ifndef H1FR5_H

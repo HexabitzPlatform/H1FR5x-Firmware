@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_inputs.c
- Description   : Source code for Bitz digital and analog inputs.
-
+ File Name  : H1FR5_inputs.c
+ Description: Manages buttons and ADC channels for analog inputs.
+ Buttons: Add, remove, detect events (press, release, click, double-click).
+ ADC: Read analog input, temperature, voltage on ports 2, 3.
  */
 
 /* Includes ****************************************************************/

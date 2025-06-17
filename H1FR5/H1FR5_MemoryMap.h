@@ -1,15 +1,15 @@
 /*
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
- 
- File Name     : H1FR5_MemoryMap.h
- Description   : Module MCU memory map header file.
 
+ File Name  : H1FR5_MemoryMap.h
+ Description: Defines STM32G0B0 memory map.
+ Flash: Application (500 KB), topology (2 KB), snippets (2 KB), EEPROM (8 KB, 1000 16-bit variables).
  */
 
 /* Define to prevent recursive inclusion************************************/
-#ifndef H0BR4_MEMORYMAP_H
-#define H0BR4_MEMORYMAP_H
+#ifndef H1FR5_MEMORYMAP_H
+#define H1FR5_MEMORYMAP_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -33,6 +33,6 @@
 }
 #endif
 
-#endif /* H0BR4_MEMORYMAP_H */
+#endif /* H1FR5_MEMORYMAP_H */
 
  /***************** (C) COPYRIGHT HEXABITZ ***** END OF FILE ****************/

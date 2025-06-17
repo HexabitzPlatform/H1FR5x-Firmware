@@ -1,15 +1,11 @@
 /*
- BitzOS (BOS) V0.3.6 - Copyright (C) 2017-2024 Hexabitz
+ BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_timers.c
- Description   : Peripheral timers setup source file.
-
- Required MCU resources :
-
- >> Timer 14 for micro-sec delay.
- >> Timer 15 for milli-sec delay.
-
+ File Name  : H1FR5_timers.c
+ Description: Manages timers and watchdog.
+ Timers: TIM16 (microsecond delays), TIM17 (millisecond delays).
+ IWDG: Watchdog with 500ms timeout.
  */
 
 /* Includes ------------------------------------------------------------------*/

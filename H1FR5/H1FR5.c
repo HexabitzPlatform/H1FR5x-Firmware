@@ -3,13 +3,11 @@
  All rights reserved
 
  File Name     : H1FR5.c
- Description   : Source code for module H1FR5.
- 	 	 	 	 (Description_of_module)
-
-(Description of Special module peripheral configuration):
->>
->>
->>
+ Description   : Source code for module H1FR5, managing GPS data acquisition and processing.
+ Module_Peripheral_Init: Initializes UART1-4, UART6, and GPS UART interface for SAM-M10Q module.
+ CLI: Commands for sampling and streaming GPS data ("sample", "stream", "stop") for position, UTC, speed, and height.
+ Messages: Processes GPS-related requests (get position, UTC, speed, height).
+ Module-specific functions: GPS data sampling, streaming to ports/terminal/buffer, and task handling.
  */
 
 /* Includes ****************************************************************/

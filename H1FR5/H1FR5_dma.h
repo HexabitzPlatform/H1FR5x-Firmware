@@ -1,15 +1,16 @@
 /*
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
- 
- File Name     : H1FR5_dma.h
- Description   : Header file contains Peripheral DMA setup.
 
+ File Name  : H1FR5_dma.h
+ Description: Declares functions and variables for DMA and CRC8 operations for UART (P1-P6).
+ DMA: Setup, start/stop, mode switching for UART RX (Channels 1-6).
+ CRC8: Initialization and computation for message validation.
  */
 
 /* Define to prevent recursive inclusion ***********************************/
-#ifndef H0BR4_dma_H
-#define H0BR4_dma_H
+#ifndef H1FR5_dma_H
+#define H1FR5_dma_H
 
 #ifdef __cplusplus
  extern "C" {
@@ -41,6 +42,6 @@ extern uint8_t  CalculateCRC8(uint8_t pBuffer[], uint16_t size);
 }
 #endif
 
-#endif /* H0BR4_dma_H */
+#endif /* H1FR5_dma_H */
 
  /***************** (C) COPYRIGHT HEXABITZ ***** END OF FILE ****************/

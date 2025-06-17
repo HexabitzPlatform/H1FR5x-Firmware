@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_uart.c
- Description   : Source Code provides configuration for USART instances.
-
+ File Name  : H1FR5_uart.c
+ Description: Initializes and manages USART1-6.
+ UART: Configure DMA RX, baudrate, pin swapping.
+ Operations: Mutex-protected read/write (polling/interrupt), port direction.
  */
 
 /* Includes ****************************************************************/

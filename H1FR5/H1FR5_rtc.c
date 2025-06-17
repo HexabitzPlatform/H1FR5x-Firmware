@@ -2,10 +2,11 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_rtc.c
- Description   : Peripheral RTC setup source file.
-
+ File Name  : H1FR5_rtc.c
+ Description: Manages internal RTC configuration.
+ RTC: Initialize, set/get time/date, manage 12/24-hour formats, backup storage.
  */
+
 
 /* Includes ****************************************************************/
 #include "BOS.h"

@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_dma.c
- Description   : source file Contains Peripheral DMA setup .
-
+ File Name  : H1FR5_dma.c
+ Description: Initialize and manage DMA for UART (P1-P6).
+ DMA: Setup, start/stop, mode switching for UART RX (Channels 1-6).
+ CRC8: Compute CRC8 for message validation.
  */
 
 /* Includes ****************************************************************/

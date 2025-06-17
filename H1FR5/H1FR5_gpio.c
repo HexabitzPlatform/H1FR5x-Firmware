@@ -2,11 +2,11 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_gpio.c
- Description   : Source code provides code for the configuration of all used GPIO pins.
-
+ File Name  : H1FR5_gpio.c
+ Description: Manages GPIO pin configuration and factory reset check.
+ GPIO: Initialize pins, configure indicator LED, retrieve UART port/pin.
+ UART: Test P1 TX to last port RX for factory reset condition.
  */
-
 /* Includes ****************************************************************/
 #include "BOS.h"
 

@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_it.c
- Description   :Interrupt Service Routines.
-
+ File Name  : H1FR5_it.c
+ Description: Handles interrupts for system and peripherals.
+ Interrupts: System tick, UART (USART1-6), DMA (channels 1-7), error handling.
+ Callbacks: Manage UART reception, DMA transfers, system reset on faults.
  */
 
 /* Includes ****************************************************************/

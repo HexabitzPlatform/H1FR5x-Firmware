@@ -2,9 +2,10 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_eeprom.c
- Description   : EEPROM emulator library (Source file).
-
+ File Name  : H1FR5_eeprom.c
+ Description: Manages emulated EEPROM in Flash memory.
+ EEPROM: Initialize, read, write, format, and manage variable data.
+ Flash: Page management, sector erasure, factory reset.
  */
 
 /* Includes ****************************************************************/

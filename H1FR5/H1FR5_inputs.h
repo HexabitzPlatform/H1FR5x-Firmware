@@ -2,10 +2,11 @@
  BitzOS (BOS) V0.4.0 - Copyright (C) 2017-2025 Hexabitz
  All rights reserved
 
- File Name     : H1FR5_inputs.h
- Description   : header file for Bitz digital and analog inputs.
- 
-*/
+ File Name  : H1FR5_inputs.h
+ Description: Declares functions for ADC channel management.
+ ADC: Configure channels for analog input, temperature, voltage on ports 1, 2.
+ GPIO: Define pin mappings for ports P1, P2.
+ */
 
 /* Includes ****************************************************************/
 #include "BOS.h"
