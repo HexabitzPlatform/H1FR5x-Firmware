@@ -17,6 +17,7 @@ uint8_t *error_restart_message ="Restarting...\r\n";
 /* Exported Variables ******************************************************/
 extern uint8_t WakeupFromStopFlag;
 extern uint8_t UARTRxBuf[NUM_OF_PORTS][MSG_RX_BUF_SIZE];
+extern uint8_t StreamCplt;
 extern TaskHandle_t xCommandConsoleTaskHandle; /* CLI Task handler */
 
 extern DMA_HandleTypeDef hdma_usart5_rx; /* GPS UART Special Peripheral */
@@ -234,6 +235,8 @@ void DMA1_Ch4_7_DMA2_Ch1_5_DMAMUX1_OVR_IRQHandler(void) {
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
 	
+	if(StreamCplt == 0)
+		StreamCplt =1;
 	/* Give back the mutex. */
 	xSemaphoreGiveFromISR(PxTxSemaphoreHandle[GetPort(huart)],&(xHigherPriorityTaskWoken));
 }
