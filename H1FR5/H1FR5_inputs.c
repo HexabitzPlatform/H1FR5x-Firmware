@@ -181,32 +181,18 @@ void CheckAttachedButtons(void){
 
 			/* 4. Determine button state based on port reading and button type */
 			switch(Button[i].Type){
-				case MOMENTARY_NO:
+				case SWITCH_NO:
 					if(connected == GPIO_PIN_SET)
 						state =CLOSED;
 					else if(connected == GPIO_PIN_RESET)
 						state =OPEN;
 					break;
 
-				case MOMENTARY_NC:
+				case SWITCH_NC:
 					if(connected == GPIO_PIN_SET)
 						state =CLOSED;
 					else if(connected == GPIO_PIN_RESET)
 						state =OPEN;
-					break;
-
-				case ONOFF_NO:
-					if(connected == GPIO_PIN_SET)
-						state =ON;
-					else if(connected == GPIO_PIN_RESET)
-						state =OFF;
-					break;
-
-				case ONOFF_NC:
-					if(connected == GPIO_PIN_SET)
-						state =OFF;
-					else if(connected == GPIO_PIN_RESET)
-						state =ON;
 					break;
 
 				default:
@@ -296,7 +282,6 @@ void CheckAttachedButtons(void){
 			switch(Button[i].State){
 				case RELEASED:
 					buttonReleasedCallback(i);
-					Button[i].State =NONE;
 					break;
 
 				case CLICKED:
@@ -504,6 +489,11 @@ BOS_Status SetButtonEvents(uint8_t port,ButtonState_e buttonState,uint8_t mode){
 		Button[port].Event |= BUTTON_EVENT_DBL_CLICKED;
 	else if(mode == BUTTON_EVENT_MODE_CLEAR && !buttonState == DBL_CLICKED)
 		Button[port].Event &=~BUTTON_EVENT_DBL_CLICKED;
+
+	if(mode == BUTTON_EVENT_MODE_OR || (mode == BUTTON_EVENT_MODE_CLEAR && buttonState == RELEASED))
+		Button[port].Event |= BUTTON_EVENT_RELEASED;
+	else if(mode == BUTTON_EVENT_MODE_CLEAR && !buttonState == RELEASED)
+		Button[port].Event &=~BUTTON_EVENT_RELEASED;
 
 	/* Add to EEPROM */
 	res =EE_ReadVariable(_EE_BUTTON_BASE + 4 * (port - 1),&temp16);
