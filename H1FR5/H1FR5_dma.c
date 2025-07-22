@@ -116,8 +116,8 @@ BOS_Status DMA_STREAM_Setup(UART_HandleTypeDef *huartSrc,UART_HandleTypeDef *hua
 	if(dstPort == 0){
 		/* set DMA index corresponding to UART to zero, so that the DMA starts writing from the beginning of the specific buffer */
 		IndexProcess[GetPort(huartSrc) - 1] =0;
-		memset(StreamBuffer,0,STREAM_BUF_SIZE);
-		if(HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(huartSrc,StreamBuffer,num))
+		memset(RawDataBuffer[GetPort(huartSrc) - 1],0,STREAM_BUF_SIZE);
+		if(HAL_OK != HAL_UARTEx_ReceiveToIdle_DMA(huartSrc,RawDataBuffer[GetPort(huartSrc) - 1],num))
 			return Status =BOS_ERROR;
 		__HAL_DMA_DISABLE_IT(hDMA,DMA_IT_HT);
 	}
